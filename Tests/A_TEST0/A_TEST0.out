@@ -1,0 +1,31 @@
+Please enter the game spec:
+.2_,.-*,.4*;.-_,.6*,.-*;.3*,.-*,.-_
+Agent A plays  
+
+Game:
+
+       0   1   2
+     --- --- --- 
+ 0|   2_   *  4*
+ 1|    _  6*   *
+ 2|   3*   *   _
+
+Intitial view:
+
+       0   1   2
+     --- --- --- 
+ 0|   .2  .-  .4
+ 1|   .-  .6  .-
+ 2|   .3  .-  .-
+
+Start!
+
+       0   1   2
+     --- --- --- 
+ 0|   .2  .-  .4
+ 1|   .-  .6  .-
+ 2|   .3  .-  .-
+
+
+Result: Game not terminated but correct 
+

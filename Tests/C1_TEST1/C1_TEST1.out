@@ -1,0 +1,31 @@
+Please enter the game spec:
+.-*,.1_,.0_;.-_,.-_,.2_;.1_,.-*,.-*
+Agent C1 plays  
+
+Game:
+
+       0   1   2
+     --- --- --- 
+ 0|    *  1_  0_
+ 1|    _   _  2_
+ 2|   1_   *   *
+
+Intitial view:
+
+       0   1   2
+     --- --- --- 
+ 0|   .-  .1  .0
+ 1|   .-  .-  .2
+ 2|   .1  .-  .-
+
+Start!
+
+       0   1   2
+     --- --- --- 
+ 0|   *-  _1  _0
+ 1|   _-  _-  _2
+ 2|   _1  *-  *-
+
+
+Result: Agent wins: Game terminated and correct 
+
