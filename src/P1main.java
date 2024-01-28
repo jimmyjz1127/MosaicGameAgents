@@ -9,6 +9,18 @@ import java.util.Scanner;
  */
 
 public class P1main {
+	// neighbor coordinates to [i,j]
+	public static int[][] neighbors1 = {
+					{-1, -1}, {-1, 0}, {-1, 1},
+					{0, -1},           {0, 1},
+					{1, -1}, {1, 0}, {1, 1}
+				};
+
+	public static int[][] neighbors = {
+					{-1, -1}, {-1, 0}, {-1, 1},
+					{0, -1}, {0, 0},   {0, 1},
+					{1, -1}, {1, 0}, {1, 1}
+				};
 
 
 	public static void main(String[] args) {
@@ -62,8 +74,8 @@ public class P1main {
 		case "B":
 			//TODO: Part B
 			
+			output = partB(board);
 			break;
-
 		case "C1":
 			//TODO: Part C1
 			
@@ -144,6 +156,13 @@ public class P1main {
 	 * 				 3 : complete && correct 
 	 */
 	public static int partA(Game game){
+		// neighbor coordinates to [i,j]
+		int[][] neighbors = {
+			{-1, -1}, {-1, 0}, {-1, 1},
+			{0, -1},           {0, 1},
+			{1, -1}, {1, 0}, {1, 1}
+		};
+
 		int[][] board = game.board;
 		int[][] state = game.state;
 
@@ -163,12 +182,7 @@ public class P1main {
 					int num_paint = (state[i][j] == 1) ? 1 : 0;
 					int num_cleared = (state[i][j] == 2) ? 1 : 0;
 
-					// Define the possible neighbor coordinates relative to [x, y]
-    				int[][] neighbors = {
-						{-1, -1}, {-1, 0}, {-1, 1},
-						{0, -1},           {0, 1},
-						{1, -1}, {1, 0}, {1, 1}
-    				};
+					
 
 					for (int[] neighbor : neighbors) {
 						int newRow = i + neighbor[0];
@@ -201,5 +215,199 @@ public class P1main {
 	}// end partA()
 
 
+
+	/*
+		State
+			0 : covered
+			1 : paint
+			2 : clear 
+
+		Clue 
+			-1 : no clue 
+		
+		Game 
+			1 : paint 
+			2 : clear 
+	*/
+
+
+	public static int partB(Game game) {
+		int[][] board = game.board;
+		int[][] state = game.state;
+
+		boolean is_complete = true;
+		boolean move_made = true;
+
+		while (move_made) {
+			move_made = false;
+			is_complete = true;
+
+			for (int i = 0; i < board.length; i++) {
+				for (int j = 0; j < board[0].length; j++) {
+					int current_clue = board[i][j];
+					int current_state = state[i][j];
+
+					if (current_state == 0){
+						
+						is_complete = false;
 	
+						for (int[] x : neighbors) {
+							int newRow = i + x[0];
+							int newCol = j + x[1];
+
+							if (newRow >= 0 && newRow < board.length && newCol >= 0 && newCol < board[0].length) {
+								int neighbor_clue = board[newRow][newCol];
+								int neighbor_state = state[newRow][newCol];
+
+								if (neighbor_clue != -1){
+									int num_covered = 0;
+									int num_painted = 0;
+
+									for (int[] y : neighbors){
+										int newNewRow = newRow + y[0];
+										int newNewCol = newCol + y[1];
+
+										if (newNewRow >= 0 && newNewRow < board.length && newNewCol >= 0 && newNewCol < board[0].length) {
+											if (state[newNewRow][newNewCol] == 1) {num_painted += 1;} 
+											else if (state[newNewRow][newNewCol] == 0){num_covered += 1;}
+										}
+									}
+
+									// Check FAN
+									if (neighbor_clue == num_painted) {
+										for (int[] y : neighbors) {
+											int newNewRow = newRow + y[0];
+											int newNewCol = newCol + y[1];
+											if (newNewRow >= 0 && newNewRow < board.length && newNewCol >= 0 && newNewCol < board[0].length){
+												if (state[newNewRow][newNewCol] == 0){
+													state[newNewRow][newNewCol] = 2;
+													move_made = true;
+												}
+											}
+										}
+									} 
+									// Check MAN
+									else if (num_covered == neighbor_clue - num_painted) {
+										for (int[] y : neighbors) {
+											int newNewRow = newRow + y[0];
+											int newNewCol = newCol + y[1];
+											if (newNewRow >= 0 && newNewRow < board.length && newNewCol >= 0 && newNewCol < board[0].length){
+												if (state[newNewRow][newNewCol] == 0){
+													state[newNewRow][newNewCol] = 1;
+													move_made = true;
+												}
+											}
+										}
+									}
+								} // end if neighbor has clue 
+							} // end if neighbor in bounds 
+						} // end iterate neighbors 
+					} // end if current cell is covered 
+				} // end inner loop
+			} // end outer loop
+		} // while loop
+
+		if (is_complete) {return 3;} 
+		else {return 2;}
+	}
+	
+
+	public static int partB2(Game game){
+		int[][] board = game.board;
+		int[][] state = game.state;
+
+		boolean is_complete = true;
+		boolean is_correct = true;
+
+		boolean move_made = true;
+
+		while (move_made){
+			move_made = false;
+			is_complete = true;
+			for (int i = 0; i < board.length; i++) {
+				for (int j = 0; j < board[0].length; j++) {
+					int clue = board[i][j];
+
+					if (state[i][j] == 0) { // if covered 
+						is_complete = false; 
+
+						if (clue == 0){
+							state[i][j] = 2;
+
+							for (int[] x : neighbors){
+								int newRow = i + x[0];
+								int newCol = j + x[1];
+
+								if (newRow >= 0 && newRow < board.length && newCol >= 0 && newCol < board[0].length) {
+									state[newRow][newCol] = 2;
+									move_made = true;
+								}
+							}
+						} else if (clue != -1){
+							int num_painted = 0;
+							int num_covered = 0;
+
+							for (int[] x : neighbors){ // check neighbors 
+								int newRow = i + x[0];
+								int newCol = j + x[1];
+
+								if (newRow >= 0 && newRow < board.length && newCol >= 0 && newCol < board[0].length) {
+									int neighbor_clue = board[newRow][newCol];
+									int neighbor_state = state[newRow][newCol];
+
+									if (neighbor_state == 1){
+										num_painted += 1;
+									} else if (neighbor_state == 0) {
+										num_covered += 1;
+									}
+								}
+							}
+							System.out.println("(" + i + ", " + j + ")");
+							System.out.println(num_covered);
+							System.out.println(num_painted);
+							System.out.println(clue);
+							
+
+							// Check FAN
+							if (num_painted == clue) {
+								for (int[] x : neighbors) {
+									int newRow = i + x[0];
+									int newCol = j + x[1];
+
+									if (newRow >= 0 && newRow < board.length && newCol >= 0 && newCol < board[0].length) {
+										if (state[newRow][newCol] == 0){
+											state[newRow][newCol] = 2;
+											move_made = true;
+										}
+									}
+								}
+							} 
+							// Check MAN 
+							else if (num_covered == clue - num_painted) {
+								for (int[] x : neighbors) {
+									int newRow = i + x[0];
+									int newCol = j + x[1];
+
+									if (newRow >= 0 && newRow < board.length && newCol >= 0 && newCol < board[0].length) {
+										if (state[newRow][newCol] == 0){
+											state[newRow][newCol] = 1;
+											move_made = true;
+										}
+									}
+								}
+							}
+
+							System.out.println("========");
+						} // if clue != 0 or -1 
+					} // if covered 
+				} // inner for 
+			} // outer for 
+		} // while 
+
+		if (is_complete) {
+			return 3;
+		} else {
+			return 2;
+		}
+	} // partb2()
 }
