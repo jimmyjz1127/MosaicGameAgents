@@ -34,7 +34,7 @@ public class Game {
 			board=new int[size][size];
 			state=new int[size][size];
 			game=new int[size][size];
-			for(int r=0; r<size; r++) {
+			for(int r=0; r<size; r++) { // iterate each row 
 				String line=lines[r];
 				String[] set=line.split(","); // columns
 				int[] bl=new int[size];
@@ -168,7 +168,7 @@ public class Game {
 				//print clues
 				if(board[r][c]==-1) {
 					code+="-";
-				}else {
+				} else {
 					code+=board[r][c];
 				}
 				System.out.format("%4s",code);

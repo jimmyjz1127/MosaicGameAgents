@@ -47,10 +47,16 @@ public class P1main {
 
 		int output=0;
 
+		/*
+			board : clues 
+			state : whether currently paint or clear or covered 
+			game  : should be painted or cleared 
+		*/
+
 		switch (args[0]) {
 		case "A":
 			//TODO: Part A
-			
+			output = partA(board);
 			break;
 
 		case "B":
@@ -113,4 +119,87 @@ public class P1main {
 
 	}
 
+
+	/*
+		State
+			0 : covered
+			1 : paint
+			2 : clear 
+
+		Clue 
+			-1 : no clue 
+		
+		Game 
+			1 : paint 
+			2 : clear 
+	*/
+
+
+	/**
+	 * Function to implement the functionality of part A 
+	 * @param game   the game board object 
+	 * @return 	     0 : !complete && !correct, 
+	 * 				 1 : complete && !correct, 
+	 * 				 2 : !complete && correct,
+	 * 				 3 : complete && correct 
+	 */
+	public static int partA(Game game){
+		int[][] board = game.board;
+		int[][] state = game.state;
+
+		boolean is_complete = true;
+		boolean is_correct = true;
+
+		// iterate through all cells 
+		for (int i = 0; i < board.length; i++){
+			for (int j = 0; j < board[0].length; j++){
+
+				if (!is_complete && !is_correct){return 0;}
+
+				if (state[i][j] == 0) {is_complete = false;}
+
+				if (board[i][j] != -1) { // if cell has a clue 
+					int num_clues = board[i][j];
+					int num_paint = (state[i][j] == 1) ? 1 : 0;
+					int num_cleared = (state[i][j] == 2) ? 1 : 0;
+
+					// Define the possible neighbor coordinates relative to [x, y]
+    				int[][] neighbors = {
+						{-1, -1}, {-1, 0}, {-1, 1},
+						{0, -1},           {0, 1},
+						{1, -1}, {1, 0}, {1, 1}
+    				};
+
+					for (int[] neighbor : neighbors) {
+						int newRow = i + neighbor[0];
+						int newCol = j + neighbor[1];
+
+						// Check if the new coordinates are within the grid boundaries
+						if (newRow >= 0 && newRow < board.length && newCol >= 0 && newCol < board[0].length) {
+							if (state[newRow][newCol] == 1) {num_paint += 1;}
+							else if (state[newRow][newCol] == 2){num_cleared += 1;}
+							else if (state[newRow][newCol] == 0){is_complete = false;}
+						}
+					}
+
+					if ((num_paint > num_clues) || (9 - num_cleared < num_clues)){is_correct = false;}
+					
+				}
+			}// end inner for 
+		}// end outer for 
+
+		if (is_complete && is_correct) {
+			return 3;
+		} else if (!is_complete && is_correct) {
+			return 2;
+		} else if (is_complete && !is_correct) {
+			return 1;
+		} else {
+			return 0;
+		}
+
+	}// end partA()
+
+
+	
 }
