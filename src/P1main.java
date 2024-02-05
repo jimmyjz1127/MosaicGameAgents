@@ -1,6 +1,13 @@
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import org.logicng.datastructures.Tristate;
+import org.logicng.formulas.Formula;
+import org.logicng.formulas.FormulaFactory;
+import org.logicng.io.parsers.ParserException;
+import org.logicng.io.parsers.PropositionalParser;
+import org.logicng.solvers.MiniSat;
+import org.logicng.solvers.SATSolver;
 
 /*
  * Starter code
@@ -77,9 +84,7 @@ public class P1main {
 			break;
 
 		case "C1":
-			output = 1;
-			String dnf = board.getClauses(0,0);
-			System.out.println(dnf);
+			output = partC1(board);
 			break;
 
 		case "C2":
@@ -256,16 +261,95 @@ public class P1main {
 		int[][] state = game.state;
 
 
-		ArrayList<int[]> to_probe = ArrayList<int[]>();
-		ArrayList<int[]> probed = ArrayList<int[]>();
+		ArrayList<int[]> to_probe = new ArrayList<int[]>();
+		ArrayList<int[]> clue_cells = new ArrayList<int[]>();
 
+		
 		// create to probe lsit 
 		for (int i = 0; i < board.length; i++){
 			for (int j = 0; j < board[0].length; j++ ){
-				if (state[i][j] == 0 && board[i][j] != -1){
-					
+				if (state[i][j] == 0){
+					to_probe.add(new int[]{i,j});
+				}
+
+				if (board[i][j] != -1){
+					clue_cells.add(new int[]{i,j});
 				}
 			}
 		}
+		
+		boolean move_made = true;
+
+		try {
+			while (move_made){
+
+				// game.printBoard();
+				
+				move_made = false; 
+
+				ArrayList<String> kb_arr = new ArrayList<String>();
+
+
+				for (int[] cell : clue_cells){
+					String clauses = game.getClauses(cell[0], cell[1]);
+					if (clauses.length() != 0) {
+						kb_arr.add("(" + clauses + ")");
+					}
+				}
+
+				String kb = String.join(" & ", kb_arr);
+
+
+				ArrayList<int[]> to_remove = new ArrayList<int[]>();
+
+				for (int[] cell : to_probe){
+
+					String paint_query = kb + " & " + "~" + game.encodeCellString(cell);
+
+					String clear_query = kb + " & " + game.encodeCellString(cell);
+
+					boolean result1 = isSatisfiable(paint_query);
+
+					boolean result2 = isSatisfiable(clear_query);
+					
+					if (result1){
+						game.state[cell[0]][cell[1]] = 1;
+
+						move_made = true;
+						to_remove.add(cell);
+					}
+
+					else if (result2) {
+						game.state[cell[0]][cell[1]] = 2;
+
+						move_made = true;
+						to_remove.add(cell);
+					}
+				}
+
+				for (int[] cell : to_remove){
+					to_probe.remove(cell);
+				}
+			}
+		} catch (ParserException e) {
+			e.printStackTrace();
+		}
+
+
+		return partA(game);
+	}
+	
+	public static boolean isSatisfiable(String dnf) throws ParserException{
+		FormulaFactory f = new FormulaFactory();
+		PropositionalParser p = new PropositionalParser(f);
+		Formula formula = p.parse(dnf);
+
+		// Formula cnf = formula.cnf();
+
+		SATSolver miniSat = MiniSat.miniSat(f);
+		miniSat.add(formula);
+		Tristate result = miniSat.sat();
+
+		return result.toString().equals("FALSE");
 	}
 }

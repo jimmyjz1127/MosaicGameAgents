@@ -287,6 +287,10 @@ public class Game {
 		// encode that there are exactly k neighbors that are painted 
 		int k = clue - painted_neighbors.size();
 
+		// if (k <= 0) {
+		// 	return "";
+		// }
+
 		List<List<String>> combinations = new ArrayList<>();
         generateCombinationsHelper(covered_neighbors, k, 0, new ArrayList<>(), combinations);
 
