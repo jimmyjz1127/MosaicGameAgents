@@ -1,4 +1,6 @@
 import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.LinkedList;
 
 /*
  * Starter code
@@ -75,8 +77,9 @@ public class P1main {
 			break;
 
 		case "C1":
-			//TODO: Part C1
-			
+			output = 1;
+			String dnf = board.getClauses(0,0);
+			System.out.println(dnf);
 			break;
 
 		case "C2":
@@ -145,6 +148,9 @@ public class P1main {
 	*/
 
 
+	
+	
+
 	/**
 	 * Function to implement the functionality of part A 
 	 * @param game   the game board object 
@@ -154,61 +160,34 @@ public class P1main {
 	 * 				 3 : complete && correct 
 	 */
 	public static int partA(Game game){
-		// neighbor coordinates to [i,j]
-		int[][] neighbors = {{-1, -1}, {-1, 0}, {-1, 1},{0, -1},{0, 1},{1, -1}, {1, 0}, {1, 1}};
-
 		int[][] board = game.board;
 		int[][] state = game.state;
 
 		boolean is_complete = true;
 		boolean is_correct = true;
 
-		// iterate through all cells 
-		for (int i = 0; i < board.length; i++){
-			for (int j = 0; j < board[0].length; j++){
+		for (int i = 0; i < board.length; i++) {
+			for (int j = 0; j < board.length; j++) {
+				if (!is_complete && !is_correct){return 0;} // if game not complete nor correct
+				if (state[i][j] == 0) {is_complete = false;} // if encounter covered cell, set game as incomplete
 
-				if (!is_complete && !is_correct){return 0;}
-
-				if (state[i][j] == 0) {is_complete = false;}
-
-				if (board[i][j] != -1) { // if cell has a clue 
+				if (board[i][j] != -1){
 					int num_clues = board[i][j];
-					int num_paint = (state[i][j] == 1) ? 1 : 0;
-					int num_cleared = (state[i][j] == 2) ? 1 : 0;
-
-					
-
-					for (int[] neighbor : neighbors) {
-						int newRow = i + neighbor[0];
-						int newCol = j + neighbor[1];
-
-						// Check if the new coordinates are within the grid boundaries
-						if (newRow >= 0 && newRow < board.length && newCol >= 0 && newCol < board[0].length) {
-							if (state[newRow][newCol] == 1) {num_paint += 1;}
-							else if (state[newRow][newCol] == 2){num_cleared += 1;}
-							else if (state[newRow][newCol] == 0){is_complete = false;}
-						}
-					}
+					int num_paint = game.getPaintedNeighbors(i,j).size();
+					int num_cleared = game.getClearedNeighbors(i,j).size();
 
 					if ((num_paint > num_clues) || (9 - num_cleared < num_clues)){is_correct = false;}
-					
-				}
-			}// end inner for 
-		}// end outer for 
-
-		if (is_complete && is_correct) {
-			return 3;
-		} else if (!is_complete && is_correct) {
-			return 2;
-		} else if (is_complete && !is_correct) {
-			return 1;
-		} else {
-			return 0;
+				}			
+			}
 		}
 
-	}// end partA()
+		if (is_complete && is_correct) {return 3;}
+		else if (!is_complete && is_correct) {return 2;}
+		else if (is_complete && !is_correct) {return 1;} 
 
-
+		return 0;
+		
+	}
 
 	/*
 		State
@@ -224,7 +203,6 @@ public class P1main {
 			2 : clear 
 	*/
 
-
 	public static int partB(Game game) {
 		int[][] board = game.board;
 		int[][] state = game.state;
@@ -235,81 +213,48 @@ public class P1main {
 		while (move_made) {
 			move_made = false;
 			is_complete = true;
-
+			
 			for (int i = 0; i < board.length; i++) {
 				for (int j = 0; j < board[0].length; j++) {
 					int current_clue = board[i][j];
 					int current_state = state[i][j];
 
-					if (current_state == 0){
-						
-						is_complete = false;
-	
-						for (int[] x : neighbors) {
-							int newRow = i + x[0];
-							int newCol = j + x[1];
+					if (current_state == 0) {
+						is_complete = false; 
 
-							if (newRow >= 0 && newRow < board.length && newCol >= 0 && newCol < board[0].length) {
-								int neighbor_clue = board[newRow][newCol];
-								int neighbor_state = state[newRow][newCol];
+						ArrayList<int[]> clue_neighbors = game.getNeighborsWithClues(i,j);
 
-								if (neighbor_clue != -1){
-									int num_covered = 0;
-									int num_painted = 0;
+						for (int[] neighbor : clue_neighbors){
+							ArrayList<int[]> painted_neighbors = game.getPaintedNeighbors(neighbor[0], neighbor[1]);
+							ArrayList<int[]> covered_neighbors = game.getCoveredNeighbors(neighbor[0], neighbor[1]);
+							int num_painted = painted_neighbors.size();
+							int num_covered = covered_neighbors.size();
+							int neighbor_clue = board[neighbor[0]][neighbor[1]];
 
-									for (int[] y : neighbors){
-										int newNewRow = newRow + y[0];
-										int newNewCol = newCol + y[1];
-
-										if (newNewRow >= 0 && newNewRow < board.length && newNewCol >= 0 && newNewCol < board[0].length) {
-											if (state[newNewRow][newNewCol] == 1) {num_painted += 1;} 
-											else if (state[newNewRow][newNewCol] == 0){num_covered += 1;}
-										}
-									}
-
-									// Check FAN
-									if (neighbor_clue == num_painted) {
-										for (int[] y : neighbors) {
-											int newNewRow = newRow + y[0];
-											int newNewCol = newCol + y[1];
-											if (newNewRow >= 0 && newNewRow < board.length && newNewCol >= 0 && newNewCol < board[0].length){
-												if (state[newNewRow][newNewCol] == 0){
-													state[newNewRow][newNewCol] = 2;
-													move_made = true;
-												}
-											}
-										}
-									} 
-									// Check MAN
-									else if (num_covered == neighbor_clue - num_painted) {
-										for (int[] y : neighbors) {
-											int newNewRow = newRow + y[0];
-											int newNewCol = newCol + y[1];
-											if (newNewRow >= 0 && newNewRow < board.length && newNewCol >= 0 && newNewCol < board[0].length){
-												if (state[newNewRow][newNewCol] == 0){
-													state[newNewRow][newNewCol] = 1;
-													move_made = true;
-												}
-											}
-										}
-									}
-								} // end if neighbor has clue 
-							} // end if neighbor in bounds 
+							// Check FAN 
+							if (neighbor_clue == num_painted){
+								move_made = game.updateState(covered_neighbors, 2);
+							} 
+							// Check MAN
+							else if (num_covered == neighbor_clue - num_painted){
+								move_made = game.updateState(covered_neighbors, 1);
+							}
+							
 						} // end iterate neighbors 
-					} // end if current cell is covered 
-				} // end inner loop
-			} // end outer loop
-		} // while loop
+					} // end check current_state == 0
+				} // end inner for 
+			} // end outer for 
+		}
 
 		if (is_complete) {return 3;} 
-		else {return 2;}
+		return 2;
 	}
 	
 
-	public static int partC1(Game game) {
-		int[][] board = game.board;
-		int[][] state = game.state;
+	// public static int partC1(Game game) {
+	// 	int[][] board = game.board;
+	// 	int[][] state = game.state;
 
-		
-	}
+
+	// }
 }

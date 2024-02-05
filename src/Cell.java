@@ -2,6 +2,9 @@
  * Cell Object
  */
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+
 
 public class Cell {
     private int x;
@@ -44,10 +47,20 @@ public class Cell {
         return clue;
     }
 
+
+    public int[][] getNeighborsCoords(){
+        int[][] neighbors = {{x-1, y-1}, {x-1, y}, {x-1, y+1},{x, y-1},{x, y+1},{x+1, y-1},{x+1, y},{x+1, y+1}};
+
+        return neighbors;
+    }
+
     /**
      * Setter for state 
      */
     public void setState(char state){
         this.state = state;
     }
+
+
+    
 }

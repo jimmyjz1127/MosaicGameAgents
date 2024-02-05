@@ -6,6 +6,13 @@
  * author: a.toniolo
  */
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.ListIterator;
+import java.util.List;
+
 public class Game {
 	int[][] board;
 	int[][] state;
@@ -179,5 +186,153 @@ public class Game {
 
 	}
 
+	/**
+	 * Returns all valid neighbor cells for given cell coordinates
+	 * @param x : x coordinate 
+	 * @param y : y coordinate 
+	 * @return : array list of int[] coordinates  
+	 */
+	public ArrayList<int[]> getNeighbors(int x, int y){
+		ArrayList<int[]> neighbors = new ArrayList<int[]>();
+
+		neighbors.add(new int[]{x-1, y-1});
+		neighbors.add(new int[]{x-1, y});
+		neighbors.add(new int[]{x-1, y+1});
+		neighbors.add(new int[]{x, y-1});
+		neighbors.add(new int[]{x, y+1});
+		neighbors.add(new int[]{x+1, y-1});
+		neighbors.add(new int[]{x+1, y});
+		neighbors.add(new int[]{x+1, y+1});
+		neighbors.add(new int[]{x,y});
+
+		neighbors = new ArrayList<>(neighbors.stream().filter(cell -> cell[0] >= 0 && cell[0] < size && cell[1] < size && cell[1] >= 0).toList());
+
+		return neighbors;
+	}
+
+	public ArrayList<int[]> getCoveredNeighbors(int x, int y){
+		ArrayList<int[]> neighbors = getNeighbors(x,y);
+
+		ArrayList<int[]> covered_neighbors = new ArrayList<>();
+
+		for (int[] neighbor : neighbors){
+			if (state[neighbor[0]][neighbor[1]] == 0){
+				covered_neighbors.add(neighbor);
+			}
+		}
+
+		return covered_neighbors;
+	}
+
+	public ArrayList<int[]> getPaintedNeighbors(int x, int y) {
+		ArrayList<int[]> neighbors = getNeighbors(x,y);
+
+		ArrayList<int[]> painted_neighbors = new ArrayList<>();
+
+		for (int[] neighbor : neighbors){
+			if (state[neighbor[0]][neighbor[1]] == 1){
+				painted_neighbors.add(neighbor);
+			}
+		}
+
+		return painted_neighbors;
+	}
+
+	public ArrayList<int[]> getClearedNeighbors(int x, int y) {
+		ArrayList<int[]> neighbors = getNeighbors(x,y);
+
+		ArrayList<int[]> cleared_neighbors = new ArrayList<>();
+
+		for (int[] neighbor : neighbors){
+			if (state[neighbor[0]][neighbor[1]] == 2){
+				cleared_neighbors.add(neighbor);
+			}
+		}
+
+		return cleared_neighbors;
+	}
+
+	public ArrayList<int[]> getNeighborsWithClues(int x, int y) {
+		ArrayList<int[]> neighbors = getNeighbors(x,y);
+
+		ArrayList<int[]> clue_neighbors = new ArrayList<>();
+
+		for (int[] neighbor : neighbors){
+			if (state[neighbor[0]][neighbor[1]] != -1){
+				clue_neighbors.add(neighbor);
+			}
+		}
+
+		return clue_neighbors;
+	} 
+
+	public boolean updateState(ArrayList<int[]> coords, int symbol){
+		boolean move_made = false;
+		for (int[] coord : coords) {
+			state[coord[0]][coord[1]] = symbol;
+			move_made = true;
+		}
+		
+		return move_made;
+	}
+
+	public String getClauses(int x, int y){
+		// the clue
+		int clue = board[x][y];
+
+		ArrayList<int[]> painted_neighbors = getPaintedNeighbors(x,y);
+		ArrayList<int[]> covered_neighbors = getCoveredNeighbors(x,y);
+		ArrayList<int[]> cleared_neighbors = getClearedNeighbors(x,y);
+
+		// encode that there are exactly k neighbors that are painted 
+		int k = clue - painted_neighbors.size();
+
+		List<List<String>> combinations = new ArrayList<>();
+        generateCombinationsHelper(covered_neighbors, k, 0, new ArrayList<>(), combinations);
+
+		ArrayList<String> clauses = new ArrayList<String>();
+
+		for (List<String> clause_arr : combinations){
+			clauses.add("(" + String.join(" & ", clause_arr) + ")"); 
+		}
+
+		return String.join(" | ", clauses);
+	}
+
+	
+
+
+	
+
+	public void generateCombinationsHelper(List<int[]> elems, int k, int start, List<String> currentCombination, List<List<String>> combinations) {
+        // When the combination is complete
+        if (k == 0) {
+			ArrayList<String> x = new ArrayList<>(currentCombination);
+			for (int[] elem : elems) {
+				String elem_string = encodeCellString(elem);
+
+				if (!currentCombination.contains(elem_string))
+					x.add("~" + elem_string);
+			}
+			combinations.add(new ArrayList<>(x));
+            return;
+        }
+
+        for (int i = start; i < elems.size(); i++) {
+            // Include the current element with a "~" appended
+            currentCombination.add(encodeCellString(elems.get(i)));
+
+			generateCombinationsHelper(elems, k - 1, i + 1, currentCombination, combinations);
+			
+            // Remove the current element to try the next possibility
+            currentCombination.remove(currentCombination.size() - 1);
+        }
+    }
+
+	
+
+	public String encodeCellString(int[] cell){
+		return Integer.toString(cell[0]) + '#' + Integer.toString(cell[1]);
+	}
 
 }
