@@ -251,10 +251,21 @@ public class P1main {
 	}
 	
 
-	// public static int partC1(Game game) {
-	// 	int[][] board = game.board;
-	// 	int[][] state = game.state;
+	public static int partC1(Game game) {
+		int[][] board = game.board;
+		int[][] state = game.state;
 
 
-	// }
+		ArrayList<int[]> to_probe = ArrayList<int[]>();
+		ArrayList<int[]> probed = ArrayList<int[]>();
+
+		// create to probe lsit 
+		for (int i = 0; i < board.length; i++){
+			for (int j = 0; j < board[0].length; j++ ){
+				if (state[i][j] == 0 && board[i][j] != -1){
+					
+				}
+			}
+		}
+	}
 }
