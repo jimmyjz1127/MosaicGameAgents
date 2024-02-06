@@ -1,6 +1,7 @@
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.HashMap;
 import org.logicng.datastructures.Tristate;
 import org.logicng.formulas.Formula;
 import org.logicng.formulas.FormulaFactory;
@@ -8,6 +9,12 @@ import org.logicng.io.parsers.ParserException;
 import org.logicng.io.parsers.PropositionalParser;
 import org.logicng.solvers.MiniSat;
 import org.logicng.solvers.SATSolver;
+
+import org.sat4j.core.VecInt;
+import org.sat4j.minisat.SolverFactory;
+import org.sat4j.specs.ContradictionException;
+import org.sat4j.specs.IProblem;
+import org.sat4j.specs.ISolver;
 
 /*
  * Starter code
@@ -88,7 +95,7 @@ public class P1main {
 			break;
 
 		case "C2":
-			//TODO: Part C2
+			output = partC2(board);
 			
 			break;
 
@@ -256,90 +263,90 @@ public class P1main {
 	}
 	
 
-	public static int partC1(Game game) {
-		int[][] board = game.board;
-		int[][] state = game.state;
 
+	public static int partC1(Game game){
+		KnowledgeBase kb = new KnowledgeBase(game);
 
-		ArrayList<int[]> to_probe = new ArrayList<int[]>();
-		ArrayList<int[]> clue_cells = new ArrayList<int[]>();
+		ArrayList<int[]> to_probe = kb.get_to_probe();
 
-		
-		// create to probe lsit 
-		for (int i = 0; i < board.length; i++){
-			for (int j = 0; j < board[0].length; j++ ){
-				if (state[i][j] == 0){
-					to_probe.add(new int[]{i,j});
-				}
-
-				if (board[i][j] != -1){
-					clue_cells.add(new int[]{i,j});
-				}
-			}
-		}
-		
 		boolean move_made = true;
 
-		try {
-			while (move_made){
+		try{
+			while (move_made) {
+				move_made=false;
 
-				// game.printBoard();
-				
-				move_made = false; 
-
-				ArrayList<String> kb_arr = new ArrayList<String>();
-
-
-				for (int[] cell : clue_cells){
-					String clauses = game.getClauses(cell[0], cell[1]);
-					if (clauses.length() != 0) {
-						kb_arr.add("(" + clauses + ")");
-					}
-				}
-
-				String kb = String.join(" & ", kb_arr);
-
-
+				kb.generateKB((x,y) -> game.getClausesDNF(x,y));
+				String kb_str = kb.getKBString(") & (", "(", ")");
 				ArrayList<int[]> to_remove = new ArrayList<int[]>();
 
 				for (int[] cell : to_probe){
+					String paint_query = kb_str + " & " + "~" + game.encodeCellString(cell);
+					String clear_query = kb_str + " & " + game.encodeCellString(cell);
 
-					String paint_query = kb + " & " + "~" + game.encodeCellString(cell);
-
-					String clear_query = kb + " & " + game.encodeCellString(cell);
-
-					boolean result1 = isSatisfiable(paint_query);
-
-					boolean result2 = isSatisfiable(clear_query);
+					boolean result1 = isSatisfiableDNF(paint_query);
+					boolean result2 = isSatisfiableDNF(clear_query);
 					
 					if (result1){
 						game.state[cell[0]][cell[1]] = 1;
-
 						move_made = true;
 						to_remove.add(cell);
 					}
-
 					else if (result2) {
 						game.state[cell[0]][cell[1]] = 2;
-
 						move_made = true;
 						to_remove.add(cell);
-					}
+					} 
 				}
 
-				for (int[] cell : to_remove){
-					to_probe.remove(cell);
-				}
+				for (int[] cell : to_remove){to_probe.remove(cell);}
 			}
-		} catch (ParserException e) {
-			e.printStackTrace();
-		}
+		} catch (ParserException e) {e.printStackTrace();}
+		return partA(game);	
+ 	}
 
+	public static int partC2(Game game){
+		KnowledgeBase kb = new KnowledgeBase(game);
 
-		return partA(game);
-	}
-	
-	public static boolean isSatisfiable(String dnf) throws ParserException{
+		ArrayList<int[]> to_probe = kb.get_to_probe();
+
+		boolean move_made = true;
+
+		// try{
+			while (move_made) {
+				move_made=false;
+
+				kb.generateKB((x,y) -> game.getClausesCNF(x,y));
+				String kb_str = kb.getKBString(" & ", "", "");
+				kb.printClauses();
+				return 1;
+				// ArrayList<int[]> to_remove = new ArrayList<int[]>();
+
+				// for (int[] cell : to_probe){
+				// 	String paint_query = kb_str + " & " + "~" + game.encodeCellString(cell);
+				// 	String clear_query = kb_str + " & " + game.encodeCellString(cell);
+
+				// 	boolean result1 = isSatisfiableCNF(paint_query);
+				// 	boolean result2 = isSatisfiableCNF(clear_query);
+					
+				// 	if (result1){
+				// 		game.state[cell[0]][cell[1]] = 1;
+				// 		move_made = true;
+				// 		to_remove.add(cell);
+				// 	}
+				// 	else if (result2) {
+				// 		game.state[cell[0]][cell[1]] = 2;
+				// 		move_made = true;
+				// 		to_remove.add(cell);
+				// 	} 
+				// }
+
+				// for (int[] cell : to_remove){to_probe.remove(cell);}
+			}
+		// } catch (ParserException e) {e.printStackTrace();}
+		return partA(game);	
+ 	}
+
+	public static boolean isSatisfiableDNF(String dnf) throws ParserException{
 		FormulaFactory f = new FormulaFactory();
 		PropositionalParser p = new PropositionalParser(f);
 		Formula formula = p.parse(dnf);
@@ -352,4 +359,35 @@ public class P1main {
 
 		return result.toString().equals("FALSE");
 	}
+
+
+	// public static boolean isSatisfiableCNF(String cnf) throws ParserException{
+	// 	HashMap<String, int> str_int = new HashMap<String, int>();
+	// 	HashMap<int, String> int_str = new HashMap<int, String>();
+
+	// 	ISolver solver = SolverFactory.newDefault();
+
+	// 	solver.newVar(countVars(cnf));
+	// 	solver.setExpectedNumberOfClauses(countClause(cnf));
+
+	// 	int index = 0;
+	// 	for ()
+	// }
+
+	public static int countVars(String exp){
+		int count = 0;
+		for (char c : exp.toCharArray()){
+			if (c == '#') count++;
+		}
+		return count;
+	}
+
+
+	public static int countClause(String clauses, String symbol){
+		int count = 0;
+		
+		return clauses.split(symbol).length;
+	}
+
+
 }

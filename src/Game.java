@@ -276,7 +276,7 @@ public class Game {
 		return move_made;
 	}
 
-	public String getClauses(int x, int y){
+	public String getClausesDNF(int x, int y){
 		// the clue
 		int clue = board[x][y];
 
@@ -287,12 +287,8 @@ public class Game {
 		// encode that there are exactly k neighbors that are painted 
 		int k = clue - painted_neighbors.size();
 
-		// if (k <= 0) {
-		// 	return "";
-		// }
-
 		List<List<String>> combinations = new ArrayList<>();
-        generateCombinationsHelper(covered_neighbors, k, 0, new ArrayList<>(), combinations);
+        combinationsDNF(covered_neighbors, k, 0, new ArrayList<>(), combinations);
 
 		ArrayList<String> clauses = new ArrayList<String>();
 
@@ -302,13 +298,9 @@ public class Game {
 
 		return String.join(" | ", clauses);
 	}
-
 	
 
-
-	
-
-	public void generateCombinationsHelper(List<int[]> elems, int k, int start, List<String> currentCombination, List<List<String>> combinations) {
+	public void combinationsDNF(List<int[]> elems, int k, int start, List<String> currentCombination, List<List<String>> combinations) {
         // When the combination is complete
         if (k == 0) {
 			ArrayList<String> x = new ArrayList<>(currentCombination);
@@ -326,17 +318,70 @@ public class Game {
             // Include the current element with a "~" appended
             currentCombination.add(encodeCellString(elems.get(i)));
 
-			generateCombinationsHelper(elems, k - 1, i + 1, currentCombination, combinations);
+			combinationsDNF(elems, k - 1, i + 1, currentCombination, combinations);
+			
+            // Remove the current element to try the next possibility
+            currentCombination.remove(currentCombination.size() - 1);
+        }
+    } 
+
+	public String getClausesCNF(int x, int y){
+		// the clue
+		int clue = board[x][y];
+
+		ArrayList<int[]> painted_neighbors = getPaintedNeighbors(x,y);
+		ArrayList<int[]> covered_neighbors = getCoveredNeighbors(x,y);
+		ArrayList<int[]> cleared_neighbors = getClearedNeighbors(x,y);
+
+		ArrayList<String> clauses = new ArrayList<String>();
+
+		// encode that there are exactly k neighbors that are painted 
+		int k = clue - painted_neighbors.size();
+
+		// "at least k neighbors are paint"
+		int c = covered_neighbors.size() - k + 1;
+		List<List<String>> combinations = new ArrayList<>();
+        combinationsCNF(covered_neighbors, c, 0, new ArrayList<>(), combinations, "");
+
+		for (List<String> clause_arr : combinations){
+			clauses.add("(" + String.join(" | ", clause_arr) + ")"); 
+		}
+
+
+		// "at most k neighbors are paint"
+		c = covered_neighbors.size() - k;
+		combinations = new ArrayList<>();
+        combinationsCNF(covered_neighbors, c, 0, new ArrayList<>(), combinations, "~");
+
+		for (List<String> clause_arr : combinations){
+			clauses.add("(" + String.join(" | ", clause_arr) + ")"); 
+		}
+
+		return String.join(" & ", clauses);
+	}
+
+
+	public void combinationsCNF(List<int[]> elems, int k, int start, List<String> currentCombination, List<List<String>> combinations, String symbol) {
+        // When the combination is complete
+        if (k == 0) {
+			combinations.add(new ArrayList<>(currentCombination));
+            return;
+        }
+
+        for (int i = start; i < elems.size(); i++) {
+            // Include the current element with a "~" appended
+            currentCombination.add(symbol + encodeCellString(elems.get(i)));
+
+			combinationsCNF(elems, k - 1, i + 1, currentCombination, combinations, symbol);
 			
             // Remove the current element to try the next possibility
             currentCombination.remove(currentCombination.size() - 1);
         }
     }
 
-	
-
 	public String encodeCellString(int[] cell){
 		return Integer.toString(cell[0]) + '#' + Integer.toString(cell[1]);
 	}
+
 
 }
