@@ -356,7 +356,6 @@ public class Game {
 		for (List<String> clause_arr : combinations){
 			clauses.add(clause_arr);
 		}
-
 		return clauses;
 	}
 
