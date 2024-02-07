@@ -1,16 +1,21 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.StringJoiner;
 
 
 public class test{
     public static void main(String[] args){
-        String[] x = {"A", "B", "C"};
 
-        StringJoiner joiner = new StringJoiner("&", "(" ,")");
+        ArrayList<int[]> x = new ArrayList<int[]>();
+        x.add(new int[]{1,2});
+        x.add(new int[]{2,2});
+        x.add(new int[]{1,0});
+        x.add(new int[]{1,2});
+        
 
-        for (String elem : x){
-            joiner.add(elem);
-        }
-        System.out.println(joiner.toString());
+        System.out.println(x.size());
+
+        HashSet<int[]> y = new HashSet<int[]>(x);
+        System.out.println(y.size());
     }
 }

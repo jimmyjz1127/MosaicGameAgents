@@ -1,28 +1,29 @@
 import java.util.Scanner;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.StringJoiner;
 
 
 interface ClauseFunction{
-    String apply(int x, int y);
+    ArrayList<List<String>> apply(int x, int y);
 }
 
 public class KnowledgeBase {
 
     // setup bijection between cnf literal and dimacs integer 
-    private HashMap<String, Integer> str_int = new HashMap<String, Integer>();
-    private HashMap<Integer, String> int_str = new HashMap<Integer, String>();
+    private Map<String, Integer> str_int = new HashMap<String, Integer>();
+    private Map<Integer, String> int_str = new HashMap<Integer, String>();
 
-    // private int[][] state;
-    // private int[][] board;
     Game game;
 
     private ArrayList<int[]> to_probe = new ArrayList<int[]>();   //cells to probe 
     private ArrayList<int[]> clue_cells = new ArrayList<int[]>(); //cells with clues 
 
-    private ArrayList<String> kb = new ArrayList<String>(); // clauses  
+    private ArrayList<ArrayList<List<String>>> kb = new ArrayList<ArrayList<List<String>>>(); // clauses  
 
     private int max_index = 0;
 
@@ -73,36 +74,71 @@ public class KnowledgeBase {
 
 
     public void generateKB(ClauseFunction func){
-        kb = new ArrayList<String>();
+        kb =new ArrayList<ArrayList<List<String>>>();
         for (int[] cell : clue_cells){
-            String clauses = func.apply(cell[0], cell[1]);
-            if (clauses.length() != 0){
+            ArrayList<List<String>> clauses = func.apply(cell[0], cell[1]);
+
+            if (clauses.size() != 0){
                 kb.add(clauses);
             }
         }
     }
 
-    public ArrayList<String> getKB(){
+    public ArrayList<ArrayList<List<String>>> getKB(){
         return kb; 
     }
 
-    public String getKBString(String symbol, String prefix, String suffix){
-        StringJoiner joiner = new StringJoiner(symbol, prefix, suffix);
-        for (String clause : kb){
-            joiner.add(clause);
+    public String getKBString(String symbol1, String symbol2, String symbol3, String prefix, String suffix){
+
+        StringJoiner joiner = new StringJoiner(symbol1, prefix, suffix);
+        for (ArrayList<List<String>> exp : kb){
+            ArrayList<String> clauses = new ArrayList<String>();
+            for (List<String> clause : exp) {
+                clauses.add("(" + String.join(symbol3, clause) + ")");
+            }
+            joiner.add(String.join(symbol2, clauses));
         }
         String result = joiner.toString();
         return result;
     }
 
-    // public ArrayList<int[]> getDimacs(){
-        
-    // }
+    public ArrayList<int[]> getDimacs(){
+        ArrayList<int[]> clauses = new ArrayList<int[]>();
+        for (ArrayList<List<String>> exp : kb){
+            for (List<String> clause_arr : exp){
+                int[] clause = new int[clause_arr.size()]; 
+
+                for (int i = 0; i < clause_arr.size(); i++){
+                    if (clause_arr.get(i).substring(0,1).equals("~")){
+                        clause[i] = -1 * str_int.get(clause_arr.get(i).substring(1));
+                    } else {                        
+                        clause[i] = str_int.get(clause_arr.get(i));
+                    }
+                }
+                if (clause.length != 0)
+                    clauses.add(clause);
+            }
+        }
+        return clauses;
+    }
 
     public void printClauses(){
-        for (String clause : kb) {
-            System.out.println(clause);
+        for (ArrayList<List<String>> clauses : kb) {
+            for (List<String> clause : clauses){
+                System.out.println(clause);
+            }
         }
+    }
+
+
+    public void printdicts(){
+        int_str.forEach((key,value) -> {
+            System.out.println(key + " : " + value);
+        });
+    }
+
+    public int getMaxIndex(){
+        return max_index;
     }
 
 }

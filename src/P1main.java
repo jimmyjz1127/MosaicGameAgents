@@ -2,6 +2,7 @@ import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.HashMap;
+import java.util.HashSet;
 import org.logicng.datastructures.Tristate;
 import org.logicng.formulas.Formula;
 import org.logicng.formulas.FormulaFactory;
@@ -13,6 +14,7 @@ import org.logicng.solvers.SATSolver;
 import org.sat4j.core.VecInt;
 import org.sat4j.minisat.SolverFactory;
 import org.sat4j.specs.ContradictionException;
+import org.sat4j.specs.TimeoutException;
 import org.sat4j.specs.IProblem;
 import org.sat4j.specs.ISolver;
 
@@ -276,7 +278,7 @@ public class P1main {
 				move_made=false;
 
 				kb.generateKB((x,y) -> game.getClausesDNF(x,y));
-				String kb_str = kb.getKBString(") & (", "(", ")");
+				String kb_str = kb.getKBString(") & (", "|", "&", "(", ")");
 				ArrayList<int[]> to_remove = new ArrayList<int[]>();
 
 				for (int[] cell : to_probe){
@@ -311,40 +313,54 @@ public class P1main {
 
 		boolean move_made = true;
 
-		// try{
+		try{
 			while (move_made) {
 				move_made=false;
 
 				kb.generateKB((x,y) -> game.getClausesCNF(x,y));
-				String kb_str = kb.getKBString(" & ", "", "");
-				kb.printClauses();
-				return 1;
-				// ArrayList<int[]> to_remove = new ArrayList<int[]>();
+				String kb_str = kb.getKBString(" & ", " & ", " | ", "", "");
+				ArrayList<int[]> to_remove = new ArrayList<int[]>();
 
-				// for (int[] cell : to_probe){
-				// 	String paint_query = kb_str + " & " + "~" + game.encodeCellString(cell);
-				// 	String clear_query = kb_str + " & " + game.encodeCellString(cell);
+				ArrayList<int[]> clauses = kb.getDimacs();
 
-				// 	boolean result1 = isSatisfiableCNF(paint_query);
-				// 	boolean result2 = isSatisfiableCNF(clear_query);
-					
-				// 	if (result1){
-				// 		game.state[cell[0]][cell[1]] = 1;
-				// 		move_made = true;
-				// 		to_remove.add(cell);
-				// 	}
-				// 	else if (result2) {
-				// 		game.state[cell[0]][cell[1]] = 2;
-				// 		move_made = true;
-				// 		to_remove.add(cell);
-				// 	} 
-				// }
+				for (int[] cell : to_probe){
+					int[] paint_query = new int[]{-1 * kb.convert(kb.encodeCellString(cell))};
+					int[] clear_query = new int[]{kb.convert(kb.encodeCellString(cell))};
 
-				// for (int[] cell : to_remove){to_probe.remove(cell);}
+					boolean result1 = isSatisfiableCNF(clauses, paint_query, kb.getMaxIndex());
+					boolean result2 = isSatisfiableCNF(clauses, clear_query, kb.getMaxIndex());
+
+					if (result1){
+						game.state[cell[0]][cell[1]] = 1;
+						move_made = true;
+						to_remove.add(cell);
+					} else if (result2) {
+						game.state[cell[0]][cell[1]] = 2;
+						move_made = true;
+						to_remove.add(cell);
+					}
+				}
+				for (int[] cell : to_remove){to_probe.remove(cell);}
 			}
-		// } catch (ParserException e) {e.printStackTrace();}
+		} catch (TimeoutException e) {e.printStackTrace();}
 		return partA(game);	
  	}
+
+	public static void printArrList(HashSet<int[]> arr){
+		for (int[] elem : arr){
+			printArr(elem);
+		}
+	}
+
+	public static void printArr(int[] arr) {
+		String[] str_arr = new String[arr.length];
+
+		for (int i = 0; i < arr.length; i++){
+			str_arr[i] = Integer.toString(arr[i]);
+		}
+
+		System.out.println("[" + String.join(", ", str_arr) + "]");
+	}
 
 	public static boolean isSatisfiableDNF(String dnf) throws ParserException{
 		FormulaFactory f = new FormulaFactory();
@@ -361,33 +377,34 @@ public class P1main {
 	}
 
 
-	// public static boolean isSatisfiableCNF(String cnf) throws ParserException{
-	// 	HashMap<String, int> str_int = new HashMap<String, int>();
-	// 	HashMap<int, String> int_str = new HashMap<int, String>();
+	public static boolean isSatisfiableCNF(ArrayList<int[]> clauses, int[] query, int max_var) throws TimeoutException{
+		ISolver solver = SolverFactory.newDefault();
+		solver.newVar(max_var);
+		solver.setExpectedNumberOfClauses(clauses.size() + 1);
 
-	// 	ISolver solver = SolverFactory.newDefault();
+		int index = 0;
+		try{
+			for (int[] clause : clauses){
+				if (clause.length != 0){
+					solver.addClause(new VecInt(clause));
+				} 		
+				index++;			
+			}
+			solver.addClause(new VecInt(query));
 
-	// 	solver.newVar(countVars(cnf));
-	// 	solver.setExpectedNumberOfClauses(countClause(cnf));
-
-	// 	int index = 0;
-	// 	for ()
-	// }
-
-	public static int countVars(String exp){
-		int count = 0;
-		for (char c : exp.toCharArray()){
-			if (c == '#') count++;
+		} catch (ContradictionException e) {
+			return false;
 		}
-		return count;
+
+		IProblem problem = solver;
+		if (problem.isSatisfiable()) {
+			return true;
+		} else {
+			return false;
+		}		
 	}
 
-
-	public static int countClause(String clauses, String symbol){
-		int count = 0;
-		
-		return clauses.split(symbol).length;
-	}
+	
 
 
 }
