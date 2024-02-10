@@ -85,19 +85,27 @@ public class P1main {
 
 		switch (args[0]) {
 		case "A":
-			output = partA(board);
+			// output = partA(board);
+			AgentA agentA = new AgentA(board);
+			output = agentA.run();
 			break;
 
 		case "B":
-			output = partB(board);
+			// output = partB(board);
+			AgentB agentB = new AgentB(board);
+			output = agentB.run();
 			break;
 
 		case "C1":
-			output = partC1(board);
+			// output = partC1(board);
+			AgentC1 agentC1 = new AgentC1(board);
+			output = agentC1.run();
 			break;
 
 		case "C2":
-			output = partC2(board);
+			// output = partC2(board);
+			AgentC2 agentC2 = new AgentC2(board);
+			output = agentC2.run();
 			
 			break;
 
@@ -145,266 +153,5 @@ public class P1main {
 		}
 
 	}
-
-
-	/*
-		State
-			0 : covered
-			1 : paint
-			2 : clear 
-
-		Clue 
-			-1 : no clue 
-		
-		Game 
-			1 : paint 
-			2 : clear 
-	*/
-
-
-	
-	
-
-	/**
-	 * Function to implement the functionality of part A 
-	 * @param game   the game board object 
-	 * @return 	     0 : !complete && !correct, 
-	 * 				 1 : complete && !correct, 
-	 * 				 2 : !complete && correct,
-	 * 				 3 : complete && correct 
-	 */
-	public static int partA(Game game){
-		int[][] board = game.board;
-		int[][] state = game.state;
-
-		boolean is_complete = true;
-		boolean is_correct = true;
-
-		for (int i = 0; i < board.length; i++) {
-			for (int j = 0; j < board.length; j++) {
-				if (!is_complete && !is_correct){return 0;} // if game not complete nor correct
-				if (state[i][j] == 0) {is_complete = false;} // if encounter covered cell, set game as incomplete
-
-				if (board[i][j] != -1){
-					int num_clues = board[i][j];
-					int num_paint = game.getPaintedNeighbors(i,j).size();
-					int num_cleared = game.getClearedNeighbors(i,j).size();
-
-					if ((num_paint > num_clues) || (9 - num_cleared < num_clues)){is_correct = false;}
-				}			
-			}
-		}
-
-		if (is_complete && is_correct) {return 3;}
-		else if (!is_complete && is_correct) {return 2;}
-		else if (is_complete && !is_correct) {return 1;} 
-
-		return 0;
-		
-	}
-
-	/*
-		State
-			0 : covered
-			1 : paint
-			2 : clear 
-
-		Clue 
-			-1 : no clue 
-		
-		Game 
-			1 : paint 
-			2 : clear 
-	*/
-
-	public static int partB(Game game) {
-		int[][] board = game.board;
-		int[][] state = game.state;
-
-		boolean is_complete = true;
-		boolean move_made = true;
-
-		while (move_made) {
-			move_made = false;
-			is_complete = true;
-			
-			for (int i = 0; i < board.length; i++) {
-				for (int j = 0; j < board[0].length; j++) {
-					int current_clue = board[i][j];
-					int current_state = state[i][j];
-
-					if (current_state == 0) {
-						is_complete = false; 
-
-						ArrayList<int[]> clue_neighbors = game.getNeighborsWithClues(i,j);
-
-						for (int[] neighbor : clue_neighbors){
-							ArrayList<int[]> painted_neighbors = game.getPaintedNeighbors(neighbor[0], neighbor[1]);
-							ArrayList<int[]> covered_neighbors = game.getCoveredNeighbors(neighbor[0], neighbor[1]);
-							int num_painted = painted_neighbors.size();
-							int num_covered = covered_neighbors.size();
-							int neighbor_clue = board[neighbor[0]][neighbor[1]];
-
-							// Check FAN 
-							if (neighbor_clue == num_painted){
-								move_made = game.updateState(covered_neighbors, 2);
-							} 
-							// Check MAN
-							else if (num_covered == neighbor_clue - num_painted){
-								move_made = game.updateState(covered_neighbors, 1);
-							}
-							
-						} // end iterate neighbors 
-					} // end check current_state == 0
-				} // end inner for 
-			} // end outer for 
-		}
-
-		if (is_complete) {return 3;} 
-		return 2;
-	}
-	
-
-
-	public static int partC1(Game game){
-		KnowledgeBase kb = new KnowledgeBase(game);
-
-		ArrayList<int[]> to_probe = kb.get_to_probe();
-
-		boolean move_made = true;
-
-		try{
-			while (move_made) {
-				move_made=false;
-
-				kb.generateKB((x,y) -> game.getClausesDNF(x,y));
-				String kb_str = kb.getKBString(") & (", "|", "&", "(", ")");
-				ArrayList<int[]> to_remove = new ArrayList<int[]>();
-
-				for (int[] cell : to_probe){
-					String paint_query = kb_str + " & " + "~" + game.encodeCellString(cell);
-					String clear_query = kb_str + " & " + game.encodeCellString(cell);
-
-					boolean result1 = isSatisfiableDNF(paint_query);
-					boolean result2 = isSatisfiableDNF(clear_query);
-					
-					if (result1){
-						game.state[cell[0]][cell[1]] = 1;
-						move_made = true;
-						to_remove.add(cell);
-					}
-					else if (result2) {
-						game.state[cell[0]][cell[1]] = 2;
-						move_made = true;
-						to_remove.add(cell);
-					} 
-				}
-
-				for (int[] cell : to_remove){to_probe.remove(cell);}
-			}
-		} catch (ParserException e) {e.printStackTrace();}
-		return partA(game);	
- 	}
-
-	public static int partC2(Game game){
-		KnowledgeBase kb = new KnowledgeBase(game);
-
-		ArrayList<int[]> to_probe = kb.get_to_probe();
-
-		boolean move_made = true;
-
-		try{
-			while (move_made) {
-				move_made=false;
-
-				kb.generateKB((x,y) -> game.getClausesCNF(x,y));
-				String kb_str = kb.getKBString(" & ", " & ", " | ", "", "");
-				ArrayList<int[]> to_remove = new ArrayList<int[]>();
-
-				ArrayList<int[]> clauses = kb.getDimacs();
-
-				for (int[] cell : to_probe){
-					int[] paint_query = new int[]{-1 * kb.convert(kb.encodeCellString(cell))};
-					int[] clear_query = new int[]{kb.convert(kb.encodeCellString(cell))};
-
-					boolean result1 = isSatisfiableCNF(clauses, paint_query, kb.getMaxIndex());
-					boolean result2 = isSatisfiableCNF(clauses, clear_query, kb.getMaxIndex());
-
-					if (result1){
-						game.state[cell[0]][cell[1]] = 1;
-						move_made = true;
-						to_remove.add(cell);
-					} else if (result2) {
-						game.state[cell[0]][cell[1]] = 2;
-						move_made = true;
-						to_remove.add(cell);
-					}
-				}
-				for (int[] cell : to_remove){to_probe.remove(cell);}
-			}
-		} catch (TimeoutException e) {e.printStackTrace();}
-		return partA(game);	
- 	}
-
-	public static void printArrList(HashSet<int[]> arr){
-		for (int[] elem : arr){
-			printArr(elem);
-		}
-	}
-
-	public static void printArr(int[] arr) {
-		String[] str_arr = new String[arr.length];
-
-		for (int i = 0; i < arr.length; i++){
-			str_arr[i] = Integer.toString(arr[i]);
-		}
-
-		System.out.println("[" + String.join(", ", str_arr) + "]");
-	}
-
-	public static boolean isSatisfiableDNF(String dnf) throws ParserException{
-		FormulaFactory f = new FormulaFactory();
-		PropositionalParser p = new PropositionalParser(f);
-		Formula formula = p.parse(dnf);
-
-		// Formula cnf = formula.cnf();
-
-		SATSolver miniSat = MiniSat.miniSat(f);
-		miniSat.add(formula);
-		Tristate result = miniSat.sat();
-
-		return result.toString().equals("FALSE");
-	}
-
-
-	public static boolean isSatisfiableCNF(ArrayList<int[]> clauses, int[] query, int max_var) throws TimeoutException{
-		ISolver solver = SolverFactory.newDefault();
-		solver.newVar(max_var);
-		solver.setExpectedNumberOfClauses(clauses.size() + 1);
-
-		int index = 0;
-		try{
-			for (int[] clause : clauses){
-				if (clause.length != 0){
-					solver.addClause(new VecInt(clause));
-				} 		
-				index++;			
-			}
-			solver.addClause(new VecInt(query));
-
-		} catch (ContradictionException e) {
-			return false;
-		}
-
-		IProblem problem = solver;
-		if (problem.isSatisfiable()) {
-			return true;
-		} else {
-			return false;
-		}		
-	}
-
-	
-
 
 }
