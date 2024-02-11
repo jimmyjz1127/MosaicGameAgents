@@ -28,17 +28,17 @@ import org.sat4j.specs.ISolver;
 
 public class P1main {
 	// neighbor coordinates to [i,j]
-	public static int[][] neighbors1 = {
-					{-1, -1}, {-1, 0}, {-1, 1},
-					{0, -1},           {0, 1},
-					{1, -1}, {1, 0}, {1, 1}
-				};
+	// public static int[][] neighbors1 = {
+	// 				{-1, -1}, {-1, 0}, {-1, 1},
+	// 				{0, -1},           {0, 1},
+	// 				{1, -1}, {1, 0}, {1, 1}
+	// 			};
 
-	public static int[][] neighbors = {
-					{-1, -1}, {-1, 0}, {-1, 1},
-					{0, -1}, {0, 0},   {0, 1},
-					{1, -1}, {1, 0}, {1, 1}
-				};
+	// public static int[][] neighbors = {
+	// 				{-1, -1}, {-1, 0}, {-1, 1},
+	// 				{0, -1}, {0, 0},   {0, 1},
+	// 				{1, -1}, {1, 0}, {1, 1}
+	// 			};
 
 
 	public static void main(String[] args) {
@@ -111,7 +111,9 @@ public class P1main {
 
 		case "C3":
 			//TODO: Part C3
-			
+
+			AgentC3 agentC3 = new AgentC3(board);
+			output = agentC3.run();
 			break;
 
 		case "D":

@@ -19,6 +19,23 @@ public class Agent{
         this.knowledgeBase = new KnowledgeBase(game);
     }
 
+	public boolean checkValid(int[][] board, int[][] state){
+		for (int i = 0; i < board.length; i++){
+			for (int j = 0; j < board[0].length; j++){
+				
+				if (board[i][j] != -1){
+					int num_clues = board[i][j];
+					int num_neighbors = getNeighbors(i,j).size();
+					int num_paint = getPaintedNeighbors(state, i, j).size();
+					int num_cleared = getClearedNeighbors(state, i, j).size();
+
+					if ((num_paint > num_clues) || (num_neighbors - num_cleared < num_clues)){return false;}
+				}
+			}
+		}
+		return true;
+	}
+
 
     public int getGameState(){
         int[][] board = game.board;
@@ -34,10 +51,11 @@ public class Agent{
 
 				if (board[i][j] != -1){
 					int num_clues = board[i][j];
+					int num_neighbors = getNeighbors(i,j).size();
 					int num_paint = getPaintedNeighbors(i,j).size();
 					int num_cleared = getClearedNeighbors(i,j).size();
 
-					if ((num_paint > num_clues) || (9 - num_cleared < num_clues)){is_correct = false;}
+					if ((num_paint > num_clues) || (num_neighbors - num_cleared < num_clues)){is_correct = false;}
 				}			
 			}
 		}
@@ -100,6 +118,20 @@ public class Agent{
 		return painted_neighbors;
 	}
 
+	public ArrayList<int[]> getPaintedNeighbors(int[][] state, int x, int y) {
+		ArrayList<int[]> neighbors = getNeighbors(x,y);
+
+		ArrayList<int[]> painted_neighbors = new ArrayList<>();
+
+		for (int[] neighbor : neighbors){
+			if (state[neighbor[0]][neighbor[1]] == 1){
+				painted_neighbors.add(neighbor);
+			}
+		}
+
+		return painted_neighbors;
+	}
+
 	public ArrayList<int[]> getClearedNeighbors(int x, int y) {
 		ArrayList<int[]> neighbors = getNeighbors(x,y);
 
@@ -107,6 +139,20 @@ public class Agent{
 
 		for (int[] neighbor : neighbors){
 			if (game.state[neighbor[0]][neighbor[1]] == 2){
+				cleared_neighbors.add(neighbor);
+			}
+		}
+
+		return cleared_neighbors;
+	}
+
+	public ArrayList<int[]> getClearedNeighbors(int[][] state, int x, int y) {
+		ArrayList<int[]> neighbors = getNeighbors(x,y);
+
+		ArrayList<int[]> cleared_neighbors = new ArrayList<>();
+
+		for (int[] neighbor : neighbors){
+			if (state[neighbor[0]][neighbor[1]] == 2){
 				cleared_neighbors.add(neighbor);
 			}
 		}
