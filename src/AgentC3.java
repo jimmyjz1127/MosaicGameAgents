@@ -12,8 +12,8 @@ public class AgentC3 extends AgentB{
 
     private double prior = 0.25;
 
-    public AgentC3(Game game){
-        super(game);
+    public AgentC3(Game game, boolean verbose){
+        super(game, verbose);
     }
 
     public int run(){
@@ -30,24 +30,28 @@ public class AgentC3 extends AgentB{
         boolean move_made = true;
         ArrayList<int[]> probe_candidates = getFrontierCandidates();
 
+
         while(move_made) {
             move_made = false;
 
             double highest_prob_paint = 0.0;
-            int[] highest_cell_paint = null;
-
             double highest_prob_clear = 0.0;
+            int[] highest_cell_paint = null;
             int[] highest_cell_clear = null;
 
             List<List<Boolean>> frontiers = getFrontiers(probe_candidates.size()); // get all possible frontiers 
+
             ArrayList<List<Boolean>> legal_frontiers = pruneFrontiers(frontiers, probe_candidates); // get all legal frontiers 
+
+            HashMap<int[], Double> pos_distribution = new HashMap<int[], Double>();
+            HashMap<int[], Double> neg_distribution = new HashMap<int[], Double>();
 
             for (int i = 0; i < probe_candidates.size(); i++){
                 int[] query_cell = probe_candidates.get(i);
                 
                 ArrayList<List<Boolean>> positives = new ArrayList<List<Boolean>>(); // list of configurations where query cell is paint 
                 ArrayList<List<Boolean>> negatives = new ArrayList<List<Boolean>>(); // list of configurations where query cell is clear 
-                
+
                 for (List<Boolean> frontier : legal_frontiers){
                     if (frontier.get(i)){ positives.add(frontier);}
                     else{ negatives.add(frontier);}
@@ -56,18 +60,22 @@ public class AgentC3 extends AgentB{
                 double pos_prob = 0.0, neg_prob = 0.0;
 
                 // sum probability of frontiers (for both cases where query cell is paint and clear)
-                for (List<Boolean> frontier : positives){ pos_prob += calcFrontierProbability(frontier);} 
+                for (List<Boolean> frontier : positives){pos_prob += calcFrontierProbability(frontier);} 
                 for (List<Boolean> frontier : negatives){neg_prob += calcFrontierProbability(frontier);}
 
                 // Calculate our unnormalized probabilities for paint and clear 
                 pos_prob = pos_prob * prior;
-                neg_prob = neg_prob * (1-prior);
+                neg_prob = neg_prob * (1.0 - prior);
 
+                if (verbose){
+                    pos_distribution.put(query_cell, pos_prob);
+                    neg_distribution.put(query_cell, neg_prob);
+                }   
                 double norm_const = pos_prob + neg_prob; // calculate normalizing constant 
 
                 // Normalize probabilities 
                 pos_prob = pos_prob/norm_const;
-                neg_prob = neg_prob/norm_const;                
+                neg_prob = neg_prob/norm_const;        
 
                 // If current "query" cell has higher probability of being paint than previous highest probability cell 
                 if (pos_prob > highest_prob_paint){
@@ -85,14 +93,33 @@ public class AgentC3 extends AgentB{
                 game.state[highest_cell_paint[0]][highest_cell_paint[1]] = 1;   
                 probe_candidates.remove(highest_cell_paint);
                 move_made = true;
+
+                if (verbose){
+                    printDistribution(pos_distribution);
+                    System.out.println("Most probable cell to paint: " + encodeCellString(highest_cell_paint));
+                    game.printBoard();
+                } 
             } 
             if (highest_cell_clear != null){
                 game.state[highest_cell_clear[0]][highest_cell_clear[1]] = 2;   
                 probe_candidates.remove(highest_cell_clear);
                 move_made = true;
+
+                if (verbose){
+                    printDistribution(neg_distribution);
+                    System.out.println("Most probable cell to clear: " + encodeCellString(highest_cell_clear));
+                    game.printBoard();
+                } 
             }         
             if (probe_candidates.size() == 0){break;}        
         }
+    }
+
+    public void printDistribution(HashMap<int[], Double> distribution){
+        System.out.println("Distribution:");
+        distribution.forEach((key, value) -> {
+            System.out.println("[" + key[0] + ", " + key[1] + "] : " + value);
+        });
     }
 
     /**
@@ -101,10 +128,10 @@ public class AgentC3 extends AgentB{
      * @return : double probability
      */
     public double calcFrontierProbability(List<Boolean> frontier){
-        double prob = 1;
+        double prob = 1.0;
         for (boolean x : frontier){
             if (x){prob = prob * prior;}
-            else{prob = prob * (1-prior);}
+            else{prob = prob * (1.0 -prior);}
         }
 
         return prob;
@@ -133,7 +160,6 @@ public class AgentC3 extends AgentB{
         }
         return pruned_frontiers;
     }
-
 
     /**
      * Returns frontier cells (all cells neighboring a clue cell including clue cells themselves)
@@ -196,13 +222,28 @@ public class AgentC3 extends AgentB{
      * @param board : 2d array to copy 
      * @return : returns copy of 2d array
      */
-    public int[][] copy_board(int[][] board){
+    public int[][] copy_board1(int[][] board){
         int[][] copy = new int[board.length][board[0].length];
 
         for (int i = 0; i < board.length; i++){
             for (int j = 0; j < board[0].length; j++){
                 copy[i][j] = board[i][j];
             }
+        }
+        return copy;
+    }
+
+    public int[][] copy_board(int[][] original) {
+        if (original == null) {
+            return null;
+        }
+
+        int[][] copy = new int[original.length][];
+        for (int i = 0; i < original.length; i++) {
+            // Allocate space for the sub-array
+            copy[i] = new int[original[i].length];
+            // Copy the sub-array
+            System.arraycopy(original[i], 0, copy[i], 0, original[i].length);
         }
 
         return copy;

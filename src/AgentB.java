@@ -12,8 +12,8 @@ public class AgentB extends Agent {
 	/**
 	 * Constructor for Agent B
 	 */
-    public AgentB(Game game){
-        super(game);
+    public AgentB(Game game, boolean verbose){
+        super(game, verbose);
     }
 
 
@@ -42,17 +42,19 @@ public class AgentB extends Agent {
 			
 			for (int i = 0; i < board.length; i++) {
 				for (int j = 0; j < board[0].length; j++) {
+
 					int current_clue = board[i][j];
 					int current_state = state[i][j];
 
 					if (current_state == 0) {
 						is_complete = false; 
 
-						ArrayList<int[]> clue_neighbors = getNeighborsWithClues(i,j);
+						ArrayList<int[]> clue_neighbors = getNeighborsWithClues(i,j, getNeighbors(i,j));
 
 						for (int[] neighbor : clue_neighbors){
-							ArrayList<int[]> painted_neighbors = getPaintedNeighbors(neighbor[0], neighbor[1]);
-							ArrayList<int[]> covered_neighbors = getCoveredNeighbors(neighbor[0], neighbor[1]);
+							ArrayList<int[]> neighbors = getNeighbors(neighbor[0], neighbor[1]);
+							ArrayList<int[]> painted_neighbors = getPaintedNeighbors(neighbor[0], neighbor[1], neighbors);
+							ArrayList<int[]> covered_neighbors = getCoveredNeighbors(neighbor[0], neighbor[1], neighbors);
 							int num_painted = painted_neighbors.size();
 							int num_covered = covered_neighbors.size();
 							int neighbor_clue = board[neighbor[0]][neighbor[1]];
@@ -60,12 +62,21 @@ public class AgentB extends Agent {
 							// Check FAN 
 							if (neighbor_clue == num_painted){
 								move_made = updateState(covered_neighbors, 2);
+								if (verbose){
+									System.out.println("\nCell to examine : [" + neighbor[0] + ", " + neighbor[1] + "]");
+									System.out.print("FAN");
+									game.printBoard();
+								}
 							} 
 							// Check MAN
 							else if (num_covered == neighbor_clue - num_painted){
 								move_made = updateState(covered_neighbors, 1);
+								if (verbose){
+									System.out.println("\nCell to examine : [" + neighbor[0] + ", " + neighbor[1] + "]");
+									System.out.print("MAN");
+									game.printBoard();
+								}
 							}
-							
 						} // end iterate neighbors 
 					} // end check current_state == 0
 				} // end inner for 
@@ -74,4 +85,6 @@ public class AgentB extends Agent {
 
 		return is_complete;
     }
+
+	
 }

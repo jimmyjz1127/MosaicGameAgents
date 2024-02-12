@@ -12,22 +12,35 @@ import java.util.StringJoiner;
 public class Agent{
     KnowledgeBase knowledgeBase;
     Game game;
+	boolean verbose;
 
-
-    public Agent(Game game){
+	/**
+	 * Agent constructor 
+	 * @param game : the game object 
+	 * @param verbose : verbosity flag 
+	 */
+    public Agent(Game game, boolean verbose){
         this.game = game;
         this.knowledgeBase = new KnowledgeBase(game);
+		this.verbose = verbose;
     }
 
+	/**
+	 * Checks if a given game board and state are consistent/valid 
+	 * @param board : the board containing clues of the game 
+	 * @param state : the board containing state of cells in the game 
+	 * @return : true if game state consistent with clues, false otherwise
+	 */
 	public boolean checkValid(int[][] board, int[][] state){
 		for (int i = 0; i < board.length; i++){
 			for (int j = 0; j < board[0].length; j++){
 				
 				if (board[i][j] != -1){
 					int num_clues = board[i][j];
-					int num_neighbors = getNeighbors(i,j).size();
-					int num_paint = getPaintedNeighbors(state, i, j).size();
-					int num_cleared = getClearedNeighbors(state, i, j).size();
+					ArrayList<int[]> neighbors = getNeighbors(i,j);
+					int num_neighbors = neighbors.size();
+					int num_paint = getPaintedNeighbors(state, i, j, neighbors).size();
+					int num_cleared = getClearedNeighbors(state, i, j, neighbors).size();
 
 					if ((num_paint > num_clues) || (num_neighbors - num_cleared < num_clues)){return false;}
 				}
@@ -36,7 +49,9 @@ public class Agent{
 		return true;
 	}
 
-
+	/**
+	 * Returns integer representign state of game as per specifications of Agent A 
+	 */
     public int getGameState(){
         int[][] board = game.board;
 		int[][] state = game.state;
@@ -51,9 +66,10 @@ public class Agent{
 
 				if (board[i][j] != -1){
 					int num_clues = board[i][j];
-					int num_neighbors = getNeighbors(i,j).size();
-					int num_paint = getPaintedNeighbors(i,j).size();
-					int num_cleared = getClearedNeighbors(i,j).size();
+					ArrayList<int[]> neighbors = getNeighbors(i,j);
+					int num_neighbors = neighbors.size();
+					int num_paint = getPaintedNeighbors(i,j, neighbors).size();
+					int num_cleared = getClearedNeighbors(i,j, neighbors).size();
 
 					if ((num_paint > num_clues) || (num_neighbors - num_cleared < num_clues)){is_correct = false;}
 				}			
@@ -90,9 +106,14 @@ public class Agent{
 		return neighbors;
 	}
 
-	public ArrayList<int[]> getCoveredNeighbors(int x, int y){
-		ArrayList<int[]> neighbors = getNeighbors(x,y);
-
+	/**
+	 * Returns all neighboring cells that are covered for a given cell
+	 * @param x : x coordinate of cell
+	 * @param y ; y coordinate of cell
+	 * @param neighbors : arraylist of all neighbors for given cell
+	 * @return : array list of neighbor cells satisfying condition 
+	 */
+	public ArrayList<int[]> getCoveredNeighbors(int x, int y, ArrayList<int[]> neighbors){
 		ArrayList<int[]> covered_neighbors = new ArrayList<>();
 
 		for (int[] neighbor : neighbors){
@@ -104,9 +125,14 @@ public class Agent{
 		return covered_neighbors;
 	}
 
-	public ArrayList<int[]> getPaintedNeighbors(int x, int y) {
-		ArrayList<int[]> neighbors = getNeighbors(x,y);
-
+	/**
+	 * Returns all neighboring cells that are painted for a given cell
+	 * @param x : x coordinate of cell
+	 * @param y ; y coordinate of cell
+	 * @param neighbors : arraylist of all neighbors for given cell
+	 * @return : array list of neighbor cells satisfying condition 
+	 */
+	public ArrayList<int[]> getPaintedNeighbors(int x, int y, ArrayList<int[]> neighbors) {
 		ArrayList<int[]> painted_neighbors = new ArrayList<>();
 
 		for (int[] neighbor : neighbors){
@@ -118,9 +144,15 @@ public class Agent{
 		return painted_neighbors;
 	}
 
-	public ArrayList<int[]> getPaintedNeighbors(int[][] state, int x, int y) {
-		ArrayList<int[]> neighbors = getNeighbors(x,y);
-
+	/**
+	 * Returns all neighboring cells that are painted for a given cell
+	 * @param state : use given state board to determine state of neighboring cells 
+	 * @param x : x coordinate of cell
+	 * @param y ; y coordinate of cell
+	 * @param neighbors : arraylist of all neighbors for given cell
+	 * @return : array list of neighbor cells satisfying condition 
+	 */
+	public ArrayList<int[]> getPaintedNeighbors(int[][] state, int x, int y, ArrayList<int[]> neighbors) {
 		ArrayList<int[]> painted_neighbors = new ArrayList<>();
 
 		for (int[] neighbor : neighbors){
@@ -132,9 +164,14 @@ public class Agent{
 		return painted_neighbors;
 	}
 
-	public ArrayList<int[]> getClearedNeighbors(int x, int y) {
-		ArrayList<int[]> neighbors = getNeighbors(x,y);
-
+	/**
+	 * Returns all neighboring cells that are clear for a given cell
+	 * @param x : x coordinate of cell
+	 * @param y ; y coordinate of cell
+	 * @param neighbors : arraylist of all neighbors for given cell
+	 * @return : array list of neighbor cells satisfying condition 
+	 */
+	public ArrayList<int[]> getClearedNeighbors(int x, int y, ArrayList<int[]> neighbors) {
 		ArrayList<int[]> cleared_neighbors = new ArrayList<>();
 
 		for (int[] neighbor : neighbors){
@@ -146,9 +183,15 @@ public class Agent{
 		return cleared_neighbors;
 	}
 
-	public ArrayList<int[]> getClearedNeighbors(int[][] state, int x, int y) {
-		ArrayList<int[]> neighbors = getNeighbors(x,y);
-
+	/**
+	 * Returns all neighboring cells that are clear for a given cell
+	 * @param state : use given state board to determine state of neighboring cells 
+	 * @param x : x coordinate of cell
+	 * @param y ; y coordinate of cell
+	 * @param neighbors : arraylist of all neighbors for given cell
+	 * @return : array list of neighbor cells satisfying condition 
+	 */
+	public ArrayList<int[]> getClearedNeighbors(int[][] state, int x, int y, ArrayList<int[]> neighbors) {
 		ArrayList<int[]> cleared_neighbors = new ArrayList<>();
 
 		for (int[] neighbor : neighbors){
@@ -160,9 +203,14 @@ public class Agent{
 		return cleared_neighbors;
 	}
 
-    public ArrayList<int[]> getNeighborsWithClues(int x, int y) {
-		ArrayList<int[]> neighbors = getNeighbors(x,y);
-
+	/**
+	 * Returns all neighboring cells containing clues for a given cell
+	 * @param x : x coordinate of cell
+	 * @param y ; y coordinate of cell
+	 * @param neighbors : arraylist of all neighbors for given cell
+	 * @return : array list of neighbor cells satisfying condition 
+	 */
+	public ArrayList<int[]> getNeighborsWithClues(int x, int y, ArrayList<int[]> neighbors) {
 		ArrayList<int[]> clue_neighbors = new ArrayList<>();
 
 		for (int[] neighbor : neighbors){
@@ -175,10 +223,35 @@ public class Agent{
 	} 
 
 
+	/**
+	 * Converts a cell array [x,y] into string encoding "x#y"
+	 * @param : cell array containing coordinates [x,y]
+	 * @return : string encoding of cell x#y
+	 */
     public String encodeCellString(int[] cell){
 		return Integer.toString(cell[0]) + '#' + Integer.toString(cell[1]);
 	}
 
+	/**
+	 * Converts string encoding of cell into array form "x#y" => [x,y]
+	 * @param cell : string encoding of cell
+	 * @return : array encoding of cell 
+	 */
+	public int[] encodeCellArray(String cell){
+		int[] coord = new int[2];
+
+		coord[0] = Integer.parseInt(cell.split("#")[0]);
+		coord[1] = Integer.parseInt(cell.split("#")[1]);
+
+		return coord;
+	}
+
+	/**
+	 * Updates game state for a list of given cells 
+	 * @param coords : coordinates of cells to update 
+	 * @param symbol : symbol to update cell state to
+	 * @return : true if at least one cell was updated, false otherwise 
+	 */
     public boolean updateState(ArrayList<int[]> coords, int symbol){
         boolean move_made = false;
         for (int[] coord : coords) {

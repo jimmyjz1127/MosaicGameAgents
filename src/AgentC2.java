@@ -16,8 +16,8 @@ import org.sat4j.specs.ISolver;
 
 public class AgentC2 extends AgentB{
 
-    public AgentC2(Game game){
-        super(game);
+    public AgentC2(Game game, boolean verbose){
+        super(game, verbose);
     }
 
     public int run(){
@@ -59,10 +59,22 @@ public class AgentC2 extends AgentB{
 						game.state[cell[0]][cell[1]] = 1;
 						move_made = true;
 						to_remove.add(cell);
+
+						if (verbose){
+							System.out.println("Query : is cell [" + cell[0] + ", " + cell[1] + "] paint");
+							System.out.println("Clause & Query : \n" + kb_str + " & ~" + encodeCellString(cell));
+							game.printBoard();
+						}
 					} else if (result2) {
 						game.state[cell[0]][cell[1]] = 2;
 						move_made = true;
 						to_remove.add(cell);
+
+						if (verbose){
+							System.out.println("Query : is cell [" + cell[0] + ", " + cell[1] + "] clear");
+							System.out.println("Clause & Query : \n" + kb_str + " & " + encodeCellString(cell));
+							game.printBoard();
+						}
 					}
 				}
 				for (int[] cell : to_remove){to_probe.remove(cell);}
@@ -101,9 +113,10 @@ public class AgentC2 extends AgentB{
 		// the clue
 		int clue = game.board[x][y];
 
-		ArrayList<int[]> painted_neighbors = getPaintedNeighbors(x,y);
-		ArrayList<int[]> covered_neighbors = getCoveredNeighbors(x,y);
-		ArrayList<int[]> cleared_neighbors = getClearedNeighbors(x,y);
+		ArrayList<int[]> neighbors = getNeighbors(x,y);
+		ArrayList<int[]> painted_neighbors = getPaintedNeighbors(x,y, neighbors);
+		ArrayList<int[]> covered_neighbors = getCoveredNeighbors(x,y, neighbors);
+		ArrayList<int[]> cleared_neighbors = getClearedNeighbors(x,y, neighbors);
 
 		ArrayList<List<String>> clauses = new ArrayList<List<String>>();
 

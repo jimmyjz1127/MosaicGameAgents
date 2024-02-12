@@ -19,14 +19,15 @@ import org.logicng.solvers.SATSolver;
 public class AgentC1 extends AgentB{
 
 
-    public AgentC1(Game game){
-        super(game);
+    public AgentC1(Game game, boolean verbose){
+        super(game, verbose);
     }
 
 
     public int run(){
         if (!sps())
         	satDNF();
+		else if (verbose){System.out.println("Game complete with SPS! No need for formal logic strategy.");}
         return getGameState();
     }
 
@@ -48,7 +49,7 @@ public class AgentC1 extends AgentB{
 
 				if (knowledgeBase.getKB().size() == 0){break;}
 
-				String kb_str = knowledgeBase.getKBString(") & (", "|", "&", "(", ")");
+				String kb_str = knowledgeBase.getKBString(") & (", " | ", " & ", "(", ")");
 				ArrayList<int[]> to_remove = new ArrayList<int[]>();
 
 				for (int[] cell : to_probe){
@@ -62,11 +63,23 @@ public class AgentC1 extends AgentB{
 						game.state[cell[0]][cell[1]] = 1;
 						move_made = true;
 						to_remove.add(cell);
+
+						if (verbose){
+							System.out.println("Query : is cell [" + cell[0] + ", " + cell[1] + "] paint");
+							System.out.println("Clause & Query : \n" + paint_query);
+							game.printBoard();
+						}
 					}
 					else if (result2) {
 						game.state[cell[0]][cell[1]] = 2;
 						move_made = true;
 						to_remove.add(cell);
+
+						if (verbose){
+							System.out.println("Query : is cell [" + cell[0] + ", " + cell[1] + "] clear");
+							System.out.println("KBU & Query : \n" + clear_query);
+							game.printBoard();
+						}
 					} 
 				}
 				// remove probed cells from to_probe list 
@@ -74,6 +87,7 @@ public class AgentC1 extends AgentB{
 			}
 		} catch (ParserException e) {e.printStackTrace();}
     }
+
 
 	/**
 	 * Checks if formal logic expression is satisfiable or not
@@ -104,9 +118,10 @@ public class AgentC1 extends AgentB{
 		// the clue
 		int clue = game.board[x][y];
 
-		ArrayList<int[]> painted_neighbors = getPaintedNeighbors(x,y);
-		ArrayList<int[]> covered_neighbors = getCoveredNeighbors(x,y);
-		ArrayList<int[]> cleared_neighbors = getClearedNeighbors(x,y);
+		ArrayList<int[]> neighbors = getNeighbors(x,y);
+		ArrayList<int[]> painted_neighbors = getPaintedNeighbors(x,y, neighbors);
+		ArrayList<int[]> covered_neighbors = getCoveredNeighbors(x,y, neighbors);
+		ArrayList<int[]> cleared_neighbors = getClearedNeighbors(x,y, neighbors);
 
 		ArrayList<List<String>> clauses = new ArrayList<List<String>>();
 
@@ -119,10 +134,8 @@ public class AgentC1 extends AgentB{
         combinationsDNF(covered_neighbors, k, 0, new ArrayList<>(), combinations);
 		
 		for (List<String> clause_arr : combinations){
-			// clauses.add("(" + String.join(" & ", clause_arr) + ")"); 
 			clauses.add(clause_arr);
 		}
-
 		return clauses;
 	}
 

@@ -28,7 +28,6 @@ import org.sat4j.specs.ISolver;
 
 public class P1main {
 	public static void main(String[] args) {
- 
 		//check inputs
  
 		boolean verbose=false;
@@ -71,28 +70,28 @@ public class P1main {
 
 		switch (args[0]) {
 		case "A":
-			AgentA agentA = new AgentA(board);
+			AgentA agentA = new AgentA(board, verbose);
 			output = agentA.run();
 			break;
 
 		case "B":
-			AgentB agentB = new AgentB(board);
+			AgentB agentB = new AgentB(board, verbose);
 			output = agentB.run();
 			break;
 
 		case "C1":
-			AgentC1 agentC1 = new AgentC1(board);
+			AgentC1 agentC1 = new AgentC1(board, verbose);
 			output = agentC1.run();
 			break;
 
 		case "C2":
-			AgentC2 agentC2 = new AgentC2(board);
+			AgentC2 agentC2 = new AgentC2(board, verbose);
 			output = agentC2.run();
 			
 			break;
 
 		case "C3":
-			AgentC3 agentC3 = new AgentC3(board);
+			AgentC3 agentC3 = new AgentC3(board, verbose);
 			output = agentC3.run();
 			break;
 
