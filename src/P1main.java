@@ -27,20 +27,6 @@ import org.sat4j.specs.ISolver;
  */
 
 public class P1main {
-	// neighbor coordinates to [i,j]
-	// public static int[][] neighbors1 = {
-	// 				{-1, -1}, {-1, 0}, {-1, 1},
-	// 				{0, -1},           {0, 1},
-	// 				{1, -1}, {1, 0}, {1, 1}
-	// 			};
-
-	// public static int[][] neighbors = {
-	// 				{-1, -1}, {-1, 0}, {-1, 1},
-	// 				{0, -1}, {0, 0},   {0, 1},
-	// 				{1, -1}, {1, 0}, {1, 1}
-	// 			};
-
-
 	public static void main(String[] args) {
  
 		//check inputs
@@ -85,41 +71,33 @@ public class P1main {
 
 		switch (args[0]) {
 		case "A":
-			// output = partA(board);
 			AgentA agentA = new AgentA(board);
 			output = agentA.run();
 			break;
 
 		case "B":
-			// output = partB(board);
 			AgentB agentB = new AgentB(board);
 			output = agentB.run();
 			break;
 
 		case "C1":
-			// output = partC1(board);
 			AgentC1 agentC1 = new AgentC1(board);
 			output = agentC1.run();
 			break;
 
 		case "C2":
-			// output = partC2(board);
 			AgentC2 agentC2 = new AgentC2(board);
 			output = agentC2.run();
 			
 			break;
 
 		case "C3":
-			//TODO: Part C3
-
 			AgentC3 agentC3 = new AgentC3(board);
 			output = agentC3.run();
 			break;
 
 		case "D":
 			break;
-
-
 		}
 
 		board.printBoard();
