@@ -168,6 +168,12 @@ public class KnowledgeBase {
         return clauses;
     }
 
+    public void removeFromProbe(ArrayList<int[]> cells){
+        for (int[] cell : cells){
+            to_probe.remove(cell);
+        }
+    }
+
 
     public void printClauses(){
         for (ArrayList<List<String>> clauses : kb) {
