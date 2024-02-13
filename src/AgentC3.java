@@ -28,7 +28,7 @@ public class AgentC3 extends AgentB{
      */
     public void satProb(){
         boolean move_made = true;
-        ArrayList<int[]> probe_candidates = getFrontierCandidates();
+        ArrayList<int[]> probe_candidates = knowledgeBase.get_to_probe();
 
 
         while(move_made) {
@@ -37,23 +37,23 @@ public class AgentC3 extends AgentB{
             double highest_prob_paint = 0.0;
             double highest_prob_clear = 0.0;
             int[] highest_cell_paint = null;
-            int[] highest_cell_clear = null;
-
-            List<List<Boolean>> frontiers = getFrontiers(probe_candidates.size()); // get all possible frontiers 
-
-            ArrayList<List<Boolean>> legal_frontiers = pruneFrontiers(frontiers, probe_candidates); // get all legal frontiers 
+            int[] highest_cell_clear = null;           
 
             HashMap<int[], Double> pos_distribution = new HashMap<int[], Double>();
             HashMap<int[], Double> neg_distribution = new HashMap<int[], Double>();
 
             for (int i = 0; i < probe_candidates.size(); i++){
                 int[] query_cell = probe_candidates.get(i);
+
+                ArrayList<int[]> frontier_candidates = getFrontierCandidates(query_cell[0], query_cell[1]);
+                List<List<Boolean>> frontiers = getFrontiers(frontier_candidates.size());
+                ArrayList<List<Boolean>> legal_frontiers = pruneFrontiers(frontiers, frontier_candidates); // get all legal frontiers 
                 
                 ArrayList<List<Boolean>> positives = new ArrayList<List<Boolean>>(); // list of configurations where query cell is paint 
                 ArrayList<List<Boolean>> negatives = new ArrayList<List<Boolean>>(); // list of configurations where query cell is clear 
 
                 for (List<Boolean> frontier : legal_frontiers){
-                    if (frontier.get(i)){ positives.add(frontier);}
+                    if (frontier.get(0)){ positives.add(frontier);}
                     else{ negatives.add(frontier);}
                 }
 
@@ -115,74 +115,23 @@ public class AgentC3 extends AgentB{
         }
     }
 
-    public void printDistribution(HashMap<int[], Double> distribution){
-        System.out.println("Distribution:");
-        distribution.forEach((key, value) -> {
-            System.out.println("[" + key[0] + ", " + key[1] + "] : " + value);
-        });
-    }
-
-    /**
-     * Calculates the un-normalized marginal probability of a frontier 
-     * @param frontier : the frontier to calculate probability of 
-     * @return : double probability
-     */
-    public double calcFrontierProbability(List<Boolean> frontier){
-        double prob = 1.0;
-        for (boolean x : frontier){
-            if (x){prob = prob * prior;}
-            else{prob = prob * (1.0 -prior);}
-        }
-
-        return prob;
-    }
-
-    /**
-     * Takes a list of frontiers and returns subset of legal frontiers (consistent with clues)
-     * @param frontiers : list of total possible frontiers (both legal and illegal ones)
-     * @param candidates : list of cells in the frontiers
-     * @return : an arraylist of legal frontiers 
-     */
-    public ArrayList<List<Boolean>> pruneFrontiers(List<List<Boolean>> frontiers, ArrayList<int[]> candidates){
-        ArrayList<List<Boolean>> pruned_frontiers = new ArrayList<List<Boolean>>();
-
-        for (List<Boolean> frontier : frontiers){
-            int[][] state_copy = copy_board(game.state);
-            for (int i = 0; i < frontier.size(); i++){
-                int[] cell = candidates.get(i);
-                if (frontier.get(i)){
-                    state_copy[cell[0]][cell[1]] = 1;
-                } else {
-                    state_copy[cell[0]][cell[1]] = 2;
-                }
-            }
-            if (checkValid(game.board, state_copy)){pruned_frontiers.add(frontier); }
-        }
-        return pruned_frontiers;
-    }
-
     /**
      * Returns frontier cells (all cells neighboring a clue cell including clue cells themselves)
      * @return : array list of cells 
      */
-    public ArrayList<int[]> getFrontierCandidates(){
+    public ArrayList<int[]> getFrontierCandidates(int x, int y){
         ArrayList<int[]> result = new ArrayList<int[]>();
-        ArrayList<int[]> covered_cells = knowledgeBase.get_to_probe();
+        ArrayList<int[]> neighbors = getNeighbors(x,y);
+        ArrayList<int[]> covered_neighbors = getCoveredNeighbors(x,y, neighbors);
 
-        for (int[] cell : covered_cells){
-            ArrayList<int[]> neighbors = getNeighbors(cell[0], cell[1]);
+        for (int[] cell : covered_neighbors){
+            ArrayList<int[]> clue_neighbors = getNeighborsWithClues(cell[0], cell[1], getNeighbors(cell[0], cell[1]));
 
-            if (game.board[cell[0]][cell[1]] != -1){
+            if (clue_neighbors.size() != 0){
                 result.add(cell);
-            } else {
-                for (int[] neighbor : neighbors){
-                    if (game.board[neighbor[0]][neighbor[1]] != -1){
-                        result.add(cell);
-                        break;
-                    }
-                }
             }
-        }        
+        }
+
         return result;
     }
 
@@ -216,21 +165,61 @@ public class AgentC3 extends AgentB{
         combination[current] = true;
         generateCombinations(current + 1, k, combination, combinations);
     }
-    
-    /**
-     * Creates a copy of 2d array 
-     * @param board : 2d array to copy 
-     * @return : returns copy of 2d array
-     */
-    public int[][] copy_board1(int[][] board){
-        int[][] copy = new int[board.length][board[0].length];
 
-        for (int i = 0; i < board.length; i++){
-            for (int j = 0; j < board[0].length; j++){
-                copy[i][j] = board[i][j];
+    /**
+     * Takes a list of frontiers and returns subset of legal frontiers (consistent with clues)
+     * @param frontiers : list of total possible frontiers (both legal and illegal ones)
+     * @param candidates : list of cells in the frontiers
+     * @return : an arraylist of legal frontiers 
+     */
+    public ArrayList<List<Boolean>> pruneFrontiers(List<List<Boolean>> frontiers, ArrayList<int[]> candidates){
+        ArrayList<List<Boolean>> pruned_frontiers = new ArrayList<List<Boolean>>();
+
+        for (List<Boolean> frontier : frontiers){
+            int[][] state_copy = copy_board(game.state);
+            for (int i = 0; i < frontier.size(); i++){
+                int[] cell = candidates.get(i);
+                if (frontier.get(i)){
+                    state_copy[cell[0]][cell[1]] = 1;
+                } else {
+                    state_copy[cell[0]][cell[1]] = 2;
+                }
+            }
+            if (checkValid(game.board, state_copy)){pruned_frontiers.add(frontier); }
+        }
+        return pruned_frontiers;
+    }
+
+    public void printDistribution(HashMap<int[], Double> distribution){
+        System.out.println("Distribution:");
+        distribution.forEach((key, value) -> {
+            System.out.println("[" + key[0] + ", " + key[1] + "] : " + value);
+        });
+    }
+
+    /**
+     * Calculates the un-normalized marginal probability of a frontier 
+     * @param frontier : the frontier to calculate probability of 
+     * @return : double probability
+     */
+    public double calcFrontierProbability(List<Boolean> frontier){
+        double prob = 1.0;
+        for (boolean x : frontier){
+            if (x){prob = prob * prior;}
+            else{prob = prob * (1.0 -prior);}
+        }
+
+        return prob;
+    }
+
+    public boolean removeFromArrayList(int[] elem, ArrayList<int[]> list) {
+        for (int i = 0; i < list.size(); i++ ){
+            if (list.get(i)[0] == elem[0] && list.get(i)[1] == elem[1]){
+                list.remove(i);
+                return true;
             }
         }
-        return copy;
+        return false;
     }
 
     public int[][] copy_board(int[][] original) {
@@ -248,6 +237,5 @@ public class AgentC3 extends AgentB{
 
         return copy;
     }
-
 
 }

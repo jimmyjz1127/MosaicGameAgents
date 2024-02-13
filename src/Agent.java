@@ -91,6 +91,7 @@ public class Agent{
 	public ArrayList<int[]> getNeighbors(int x, int y){
 		ArrayList<int[]> neighbors = new ArrayList<int[]>();
 
+		neighbors.add(new int[]{x,y});
 		neighbors.add(new int[]{x-1, y-1});
 		neighbors.add(new int[]{x-1, y});
 		neighbors.add(new int[]{x-1, y+1});
@@ -99,7 +100,6 @@ public class Agent{
 		neighbors.add(new int[]{x+1, y-1});
 		neighbors.add(new int[]{x+1, y});
 		neighbors.add(new int[]{x+1, y+1});
-		neighbors.add(new int[]{x,y});
 
 		neighbors = new ArrayList<>(neighbors.stream().filter(cell -> cell[0] >= 0 && cell[0] < game.size && cell[1] < game.size && cell[1] >= 0).toList());
 
