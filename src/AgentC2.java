@@ -42,24 +42,23 @@ public class AgentC2 extends AgentB{
 			while (move_made) {
 				move_made=false;
 
-				// knowledgeBase.pruneClueCells();
-				knowledgeBase.generateKB((x,y) -> getClausesCNF(x,y));
-
-                if (knowledgeBase.getKB().size() == 0) {break;}
-
-				String kb_str = knowledgeBase.getKBString(" & ", " & ", " | ", "", "");
 				ArrayList<int[]> to_remove = new ArrayList<int[]>();
 
+				knowledgeBase.generateKB((x,y) -> getClausesCNF(x,y));
+
+				if (knowledgeBase.getKB().size() == 0) {break;}
+				String kb_str = knowledgeBase.getKBString(" & ", " & ", " | ", "", "");
 				ArrayList<int[]> clauses = knowledgeBase.getDimacs();
 
 				for (int[] cell : to_probe){
+
 					int[] paint_query = new int[]{-1 * knowledgeBase.convert(knowledgeBase.encodeCellString(cell))};
 					int[] clear_query = new int[]{knowledgeBase.convert(knowledgeBase.encodeCellString(cell))};
 
 					boolean result1 = isSatisfiableCNF(clauses, paint_query, knowledgeBase.getMaxIndex());
 					boolean result2 = isSatisfiableCNF(clauses, clear_query, knowledgeBase.getMaxIndex());
 
-					if (result1){
+					if (!result1){
 						game.state[cell[0]][cell[1]] = 1;
 						move_made = true;
 						to_remove.add(cell);
@@ -69,7 +68,7 @@ public class AgentC2 extends AgentB{
 							System.out.println("Clause & Query : \n" + kb_str + " & ~" + encodeCellString(cell));
 							game.printBoard();
 						}
-					} else if (result2) {
+					}  else if (!result2) {
 						game.state[cell[0]][cell[1]] = 2;
 						move_made = true;
 						to_remove.add(cell);
@@ -107,17 +106,12 @@ public class AgentC2 extends AgentB{
 				index++;			
 			}
 			solver.addClause(new VecInt(query));
-
 		} catch (ContradictionException e) {
 			return false;
 		}
 
 		IProblem problem = solver;
-		if (problem.isSatisfiable()) {
-			return true;
-		} else {
-			return false;
-		}		
+		return problem.isSatisfiable();
 	}
 
     public ArrayList<List<String>> getClausesCNF(int x, int y){
@@ -139,7 +133,7 @@ public class AgentC2 extends AgentB{
 		// "at most k paint"
 		int c = k + 1;
 		List<List<String>> combinations = new ArrayList<>();
-        combinationsCNF(covered_neighbors, c, 0, new ArrayList<>(), combinations, "");
+        combinationsCNF(covered_neighbors, c, 0, new ArrayList<>(), combinations, "~");
 
 		for (List<String> clause_arr : combinations){
 			clauses.add(clause_arr);
@@ -148,7 +142,7 @@ public class AgentC2 extends AgentB{
 		// "at most n-k non-paint"
 		c = covered_neighbors.size() - k + 1;
 		combinations = new ArrayList<>();
-        combinationsCNF(covered_neighbors, c, 0, new ArrayList<>(), combinations, "~");
+        combinationsCNF(covered_neighbors, c, 0, new ArrayList<>(), combinations, "");
 
 		for (List<String> clause_arr : combinations){
 			clauses.add(clause_arr);
