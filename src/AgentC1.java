@@ -25,8 +25,10 @@ public class AgentC1 extends AgentB{
 
 
     public int run(){
-        if (!sps())
+        if (!sps()){
+			knowledgeBase.updateToProbe();
         	satDNF();
+	    }
 		else if (verbose){System.out.println("Game complete with SPS! No need for formal logic strategy.");}
         return getGameState();
     }
@@ -56,8 +58,8 @@ public class AgentC1 extends AgentB{
 					String paint_query = kb_str + " & " + "~" + encodeCellString(cell);
 					String clear_query = kb_str + " & " + encodeCellString(cell);
 
-					boolean result1 = isSatisfiableDNF(paint_query);
-					boolean result2 = isSatisfiableDNF(clear_query);
+					boolean result1 = isSatisfiableDNF(paint_query); // check if satisfiable for query cell to be painted 
+					boolean result2 = isSatisfiableDNF(clear_query); // check if satisfiable for query cell to be clear 
 					
 					if (result1){
 						game.state[cell[0]][cell[1]] = 1;

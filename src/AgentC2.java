@@ -22,8 +22,11 @@ public class AgentC2 extends AgentB{
 
     public int run(){
         if (!sps()){
-            satCNF();
-        }
+			knowledgeBase.updateToProbe();
+        	satCNF();
+	    }
+			
+		else if (verbose){System.out.println("Game complete with SPS! No need for formal logic strategy.");}
         return getGameState();
     }
 
@@ -39,6 +42,7 @@ public class AgentC2 extends AgentB{
 			while (move_made) {
 				move_made=false;
 
+				// knowledgeBase.pruneClueCells();
 				knowledgeBase.generateKB((x,y) -> getClausesCNF(x,y));
 
                 if (knowledgeBase.getKB().size() == 0) {break;}
@@ -82,6 +86,13 @@ public class AgentC2 extends AgentB{
 		} catch (TimeoutException e) {e.printStackTrace();}
     }
 
+	/**
+	 * Determines if a logical sentence (in CNF) is satisfiable or not 
+	 * @param clauses : clauses of knowledge base 
+	 * @param query : query 
+	 * @param max_var : the number of literals in clauses and query combined 
+	 * @return : true if satisfiable, false otherwise
+	 */
     public  boolean isSatisfiableCNF(ArrayList<int[]> clauses, int[] query, int max_var) throws TimeoutException{
 		ISolver solver = SolverFactory.newDefault();
 		solver.newVar(max_var);

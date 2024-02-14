@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.StringJoiner;
 
+
 /**
  * Interface for setting up anonymous function (used in generateKB() function below)
  */
@@ -66,6 +67,7 @@ public class KnowledgeBase {
         }
     }
 
+
     /**
      * Turns a cell into a string encoding 
      * @param cell : int array of form [x,y] where x is row-index and y is column-index
@@ -118,6 +120,49 @@ public class KnowledgeBase {
         }
     }
 
+    public void pruneClueCells(){ 
+        ArrayList<int[]> new_clue_cells = new ArrayList<int[]>();
+        for (int cell[] : clue_cells){
+            if (!isCellComplete(cell[0], cell[1])){
+                new_clue_cells.add(cell);
+            }
+        }
+        clue_cells = new_clue_cells;
+    }
+
+    
+
+    /**
+	 * Returns all valid neighbor cells for given cell coordinates
+	 * @param x : x coordinate 
+	 * @param y : y coordinate 
+	 * @return : array list of int[] coordinates  
+	 */
+	public ArrayList<int[]> getNeighbors(int x, int y){
+		ArrayList<int[]> neighbors = new ArrayList<int[]>();
+
+		neighbors.add(new int[]{x,y});
+		neighbors.add(new int[]{x-1, y-1});
+		neighbors.add(new int[]{x-1, y});
+		neighbors.add(new int[]{x-1, y+1});
+		neighbors.add(new int[]{x, y-1});
+		neighbors.add(new int[]{x, y+1});
+		neighbors.add(new int[]{x+1, y-1});
+		neighbors.add(new int[]{x+1, y});
+		neighbors.add(new int[]{x+1, y+1});
+
+		neighbors = new ArrayList<>(neighbors.stream().filter(cell -> cell[0] >= 0 && cell[0] < game.size && cell[1] < game.size && cell[1] >= 0).toList());
+		return neighbors;
+	}
+
+    public boolean isCellComplete(int x, int y){
+        for (int[] cell : getNeighbors(x,y)){
+            if (game.state[cell[0]][cell[1]] == 0) {return false;}
+        }
+        return true;
+	}
+
+
     /**
      * Getter function of knowledge base arraylist 
      */
@@ -168,6 +213,18 @@ public class KnowledgeBase {
         return clauses;
     }
 
+
+    public void updateToProbe(){
+        ArrayList<int[]> new_probe = new ArrayList<int[]>();
+        for (int[] elem : to_probe){
+            if (game.state[elem[0]][elem[1]] == 0){
+                new_probe.add(elem);
+            }
+        }
+
+        to_probe = new_probe;
+    }
+
     public void removeFromProbe(ArrayList<int[]> cells){
         for (int[] cell : cells){
             to_probe.remove(cell);
@@ -183,12 +240,6 @@ public class KnowledgeBase {
         }
     }
 
-
-    public void printdicts(){
-        int_str.forEach((key,value) -> {
-            System.out.println(key + " : " + value);
-        });
-    }
 
     public int getMaxIndex(){
         return max_index;

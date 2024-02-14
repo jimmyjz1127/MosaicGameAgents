@@ -1,4 +1,3 @@
-
 public class AgentA extends Agent{
 
     public AgentA(Game game, boolean verbose){

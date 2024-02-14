@@ -7,8 +7,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.StringJoiner;
 
-
-
 public class Agent{
     KnowledgeBase knowledgeBase;
     Game game;
@@ -50,7 +48,7 @@ public class Agent{
 	}
 
 	/**
-	 * Returns integer representign state of game as per specifications of Agent A 
+	 * Returns integer representing state of game as per specifications of Agent A 
 	 */
     public int getGameState(){
         int[][] board = game.board;
@@ -102,7 +100,6 @@ public class Agent{
 		neighbors.add(new int[]{x+1, y+1});
 
 		neighbors = new ArrayList<>(neighbors.stream().filter(cell -> cell[0] >= 0 && cell[0] < game.size && cell[1] < game.size && cell[1] >= 0).toList());
-
 		return neighbors;
 	}
 

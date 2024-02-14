@@ -5,7 +5,6 @@
  * 
  * author: a.toniolo
  */
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Set;
