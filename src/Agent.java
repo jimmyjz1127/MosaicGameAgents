@@ -111,7 +111,7 @@ public class Agent{
 	 * @return : array list of neighbor cells satisfying condition 
 	 */
 	public ArrayList<int[]> getCoveredNeighbors(int x, int y, ArrayList<int[]> neighbors){
-		ArrayList<int[]> covered_neighbors = new ArrayList<>();
+		ArrayList<int[]> covered_neighbors = new ArrayList<int[]>();
 
 		for (int[] neighbor : neighbors){
 			if (game.state[neighbor[0]][neighbor[1]] == 0){
@@ -130,7 +130,7 @@ public class Agent{
 	 * @return : array list of neighbor cells satisfying condition 
 	 */
 	public ArrayList<int[]> getPaintedNeighbors(int x, int y, ArrayList<int[]> neighbors) {
-		ArrayList<int[]> painted_neighbors = new ArrayList<>();
+		ArrayList<int[]> painted_neighbors = new ArrayList<int[]>();
 
 		for (int[] neighbor : neighbors){
 			if (game.state[neighbor[0]][neighbor[1]] == 1){
@@ -150,7 +150,7 @@ public class Agent{
 	 * @return : array list of neighbor cells satisfying condition 
 	 */
 	public ArrayList<int[]> getPaintedNeighbors(int[][] state, int x, int y, ArrayList<int[]> neighbors) {
-		ArrayList<int[]> painted_neighbors = new ArrayList<>();
+		ArrayList<int[]> painted_neighbors = new ArrayList<int[]>();
 
 		for (int[] neighbor : neighbors){
 			if (state[neighbor[0]][neighbor[1]] == 1){
@@ -169,7 +169,7 @@ public class Agent{
 	 * @return : array list of neighbor cells satisfying condition 
 	 */
 	public ArrayList<int[]> getClearedNeighbors(int x, int y, ArrayList<int[]> neighbors) {
-		ArrayList<int[]> cleared_neighbors = new ArrayList<>();
+		ArrayList<int[]> cleared_neighbors = new ArrayList<int[]>();
 
 		for (int[] neighbor : neighbors){
 			if (game.state[neighbor[0]][neighbor[1]] == 2){
@@ -189,7 +189,7 @@ public class Agent{
 	 * @return : array list of neighbor cells satisfying condition 
 	 */
 	public ArrayList<int[]> getClearedNeighbors(int[][] state, int x, int y, ArrayList<int[]> neighbors) {
-		ArrayList<int[]> cleared_neighbors = new ArrayList<>();
+		ArrayList<int[]> cleared_neighbors = new ArrayList<int[]>();
 
 		for (int[] neighbor : neighbors){
 			if (state[neighbor[0]][neighbor[1]] == 2){
@@ -208,7 +208,7 @@ public class Agent{
 	 * @return : array list of neighbor cells satisfying condition 
 	 */
 	public ArrayList<int[]> getNeighborsWithClues(int x, int y, ArrayList<int[]> neighbors) {
-		ArrayList<int[]> clue_neighbors = new ArrayList<>();
+		ArrayList<int[]> clue_neighbors = new ArrayList<int[]>();
 
 		for (int[] neighbor : neighbors){
 			if (game.state[neighbor[0]][neighbor[1]] != -1){

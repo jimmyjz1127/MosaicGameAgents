@@ -146,7 +146,6 @@ public class AgentC3 extends AgentB{
                 result.add(cell);
             }
         }
-
         return result;
     }
 
